@@ -1,0 +1,182 @@
+package ai.mindgard.sandbox.wsapi;
+
+import ai.mindgard.JSON;
+import ai.mindgard.MindgardAuthentication;
+import ai.mindgard.MindgardSettings;
+import ai.mindgard.MindgardSettings.Settings;
+import ai.mindgard.sandbox.Mindgard;
+import ai.mindgard.sandbox.wsapi.messages.CliInitResponse;
+import ai.mindgard.sandbox.wsapi.messages.OrchestratorSetupRequest;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+import org.opentest4j.AssertionFailedError;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.WebSocket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+class SandboxConnectionFactoryTest {
+
+    @Test
+    void connect() throws IOException, InterruptedException {
+        var http = mock(HttpClient.class, Mockito.RETURNS_DEEP_STUBS);
+        var mindgard = mock(Mindgard.class);
+        var websocket = mock(WebSocket.class);
+        var auth = mock(MindgardAuthentication.class);
+        var client = mock(MindgardWebsocketClient.class);
+        HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null);
+        var expectedRequest = new OrchestratorSetupRequest(
+            settings.testName(),
+            1,
+            settings.systemPrompt(),
+            settings.dataset(),
+            null,
+            "llm",
+            "user",
+            "sandbox",
+            null
+        );
+        Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
+            assertEquals(body, JSON.json(expectedRequest));
+            return publisher;
+        };
+        var response = mock(HttpResponse.class);
+
+        when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
+
+        var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
+
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        when(response.body()).thenReturn(JSON.json(cliInitResponse));
+        when(
+            http
+                .newWebSocketBuilder()
+                .subprotocols("json.webpubsub.azure.v1")
+                .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+        ).thenReturn(CompletableFuture.completedFuture(websocket));
+
+        var connection = cf.connect(mindgard, auth, settings, l -> {});
+
+        assertEquals(connection, new SandboxConnection(cliInitResponse,websocket,client));
+
+    }
+
+    @Test
+    void connectAbortsOnError() throws IOException, InterruptedException {
+        var http = mock(HttpClient.class, Mockito.RETURNS_DEEP_STUBS);
+        var mindgard = mock(Mindgard.class);
+        var websocket = mock(WebSocket.class);
+        var auth = mock(MindgardAuthentication.class);
+        var client = mock(MindgardWebsocketClient.class);
+        HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null);
+        var expectedRequest = new OrchestratorSetupRequest(
+                settings.testName(),
+                1,
+                settings.systemPrompt(),
+                settings.dataset(),
+                null,
+                "llm",
+                "user",
+                "sandbox",
+                null
+        );
+        Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
+            assertEquals(body, JSON.json(expectedRequest));
+            return publisher;
+        };
+        var response = mock(HttpResponse.class);
+
+        when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
+
+        var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
+
+        CliInitResponse cliInitResponse = new CliInitResponse(null, null, List.of(new CliInitResponse.Error("lol")));
+        when(response.body()).thenReturn(JSON.json(cliInitResponse));
+        when(
+                http
+                        .newWebSocketBuilder()
+                        .subprotocols("json.webpubsub.azure.v1")
+                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+        ).thenReturn(CompletableFuture.completedFuture(websocket));
+
+        try {
+            var connection = cf.connect(mindgard, auth, settings, l -> {});
+            fail("Expected exception due to CLIInit Errors");
+        } catch (SandboxConnectionFactory.ConnectionFailedException e) {
+
+        }
+    }
+
+    @Test
+    void usesCustomDataset() throws IOException, InterruptedException {
+        var customDataset = List.of(
+            "Prompt1",
+            "Prompt2"
+        );
+
+        Path customDatasetPath = Files.createTempFile("custom", "dataset");
+        customDatasetPath.toFile().deleteOnExit();
+        Files.write(customDatasetPath, customDataset);
+
+        var http = mock(HttpClient.class, Mockito.RETURNS_DEEP_STUBS);
+        var mindgard = mock(Mindgard.class);
+        var websocket = mock(WebSocket.class);
+        var auth = mock(MindgardAuthentication.class);
+        var client = mock(MindgardWebsocketClient.class);
+        HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", customDatasetPath.toAbsolutePath().toString());
+        var expectedRequest = new OrchestratorSetupRequest(
+                settings.testName(),
+                1,
+                settings.systemPrompt(),
+                JSON.json(customDataset),
+                JSON.json(customDataset),
+                "llm",
+                "user",
+                "sandbox",
+                null
+        );
+        Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
+            assertEquals(body, JSON.json(expectedRequest));
+            return publisher;
+        };
+        var response = mock(HttpResponse.class);
+
+        when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
+
+        var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
+
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        when(response.body()).thenReturn(JSON.json(cliInitResponse));
+        when(
+                http
+                        .newWebSocketBuilder()
+                        .subprotocols("json.webpubsub.azure.v1")
+                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+        ).thenReturn(CompletableFuture.completedFuture(websocket));
+
+        var connection = cf.connect(mindgard, auth, settings, l -> {});
+
+        assertEquals(connection, new SandboxConnection(cliInitResponse,websocket,client));
+
+    }
+
+
+}
