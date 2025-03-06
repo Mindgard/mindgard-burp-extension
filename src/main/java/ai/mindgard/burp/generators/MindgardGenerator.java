@@ -6,9 +6,6 @@ import burp.api.montoya.intruder.GeneratedPayload;
 import burp.api.montoya.intruder.IntruderInsertionPoint;
 import burp.api.montoya.intruder.PayloadGenerator;
 
-import java.util.Optional;
-import java.util.function.Consumer;
-
 public class MindgardGenerator implements PayloadGenerator {
     private final Mindgard mindgard;
     private final Log logger;
@@ -27,9 +24,7 @@ public class MindgardGenerator implements PayloadGenerator {
         }
 
         return mindgard.poll().map(taken -> {
-            logger.log("TAKEN " + taken);
             if (taken.correlationId() == null) {
-                logger.log("PREMATURE END");
                 return end();
             }
             return GeneratedPayload.payload(taken.correlationId());

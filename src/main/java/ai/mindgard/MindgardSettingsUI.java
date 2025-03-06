@@ -4,14 +4,12 @@ import ai.mindgard.sandbox.Dataset;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static java.util.List.of;
 import static java.util.stream.Collectors.joining;
 
 public class MindgardSettingsUI extends JPanel implements MindgardSettings {

@@ -1,4 +1,4 @@
 package ai.mindgard;
 public interface Log {
-    public void log(String message);
+    void log(String message);
 }

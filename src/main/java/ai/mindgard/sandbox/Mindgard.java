@@ -5,21 +5,12 @@ import ai.mindgard.MindgardAuthentication;
 import ai.mindgard.MindgardSettings;
 import ai.mindgard.sandbox.wsapi.SandboxConnection;
 import ai.mindgard.sandbox.wsapi.SandboxConnectionFactory;
-import ai.mindgard.sandbox.wsapi.messages.CliInitResponse;
-import ai.mindgard.sandbox.wsapi.MindgardWebsocketClient;
-import ai.mindgard.sandbox.wsapi.messages.OrchestratorSetupRequest;
 
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.WebSocket;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
-
-import static ai.mindgard.JSON.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -73,13 +64,11 @@ public class Mindgard {
     private Probe pending(Probe popped) {
         if (popped != null) {
             pending.add(popped);
-            logger.log("PROCESSING " + popped.correlationId());
         }
         return popped;
     }
 
     public Probe reply(String correlationId, String reply) {
-        logger.log("REPLYING TO " + correlationId  + " WITH " + reply);
         Probe probe = pending.get(correlationId);
         pending.clear(correlationId);
         if (this.connection != null) {
