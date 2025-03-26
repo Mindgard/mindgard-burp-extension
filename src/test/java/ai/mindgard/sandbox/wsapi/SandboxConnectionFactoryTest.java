@@ -20,6 +20,8 @@ import java.net.http.HttpResponse;
 import java.net.http.WebSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -40,7 +42,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null);
         var expectedRequest = new OrchestratorSetupRequest(
             settings.testName(),
             1,
@@ -50,6 +52,8 @@ class SandboxConnectionFactoryTest {
             "llm",
             "user",
             "sandbox",
+            null,
+            null,
             null
         );
         Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
@@ -85,7 +89,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null);
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
                 1,
@@ -95,6 +99,8 @@ class SandboxConnectionFactoryTest {
                 "llm",
                 "user",
                 "sandbox",
+                null,
+                null,
                 null
         );
         Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
@@ -141,7 +147,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", customDatasetPath.toAbsolutePath().toString());
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", customDatasetPath.toAbsolutePath().toString(), null, null);
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
                 1,
@@ -151,6 +157,8 @@ class SandboxConnectionFactoryTest {
                 "llm",
                 "user",
                 "sandbox",
+                null,
+                null,
                 null
         );
         Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
@@ -177,6 +185,213 @@ class SandboxConnectionFactoryTest {
         assertEquals(connection, new SandboxConnection(cliInitResponse,websocket,client));
 
     }
+
+    @Test
+    void usesExcludeSingleAttack() throws IOException, InterruptedException {
+        
+        var excludedAttack = "PersonGPT";
+        var http = mock(HttpClient.class, Mockito.RETURNS_DEEP_STUBS);
+        var mindgard = mock(Mindgard.class);
+        var websocket = mock(WebSocket.class);
+        var auth = mock(MindgardAuthentication.class);
+        var client = mock(MindgardWebsocketClient.class);
+        HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null);
+        var expectedRequest = new OrchestratorSetupRequest(
+                settings.testName(),
+                1,
+                settings.systemPrompt(),
+                settings.dataset(),
+                null,
+                "llm",
+                "user",
+                "sandbox",
+                null,
+                List.of(excludedAttack),
+                null
+        );
+
+        Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
+            assertEquals(body, JSON.json(expectedRequest));
+            return publisher;
+        };
+        var response = mock(HttpResponse.class);
+
+        when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
+
+        var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
+
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        when(response.body()).thenReturn(JSON.json(cliInitResponse));
+        when(
+                http
+                        .newWebSocketBuilder()
+                        .subprotocols("json.webpubsub.azure.v1")
+                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+        ).thenReturn(CompletableFuture.completedFuture(websocket));
+
+        var connection = cf.connect(mindgard, auth, settings, l -> {});
+
+        assertEquals(connection, new SandboxConnection(cliInitResponse,websocket,client));
+
+    }
+
+    @Test
+    void usesExcludeMultipleAttacks() throws IOException, InterruptedException {
+        
+        var excludedAttack = "PersonGPT,AntiGPT,DynamicTest";
+        var http = mock(HttpClient.class, Mockito.RETURNS_DEEP_STUBS);
+        var mindgard = mock(Mindgard.class);
+        var websocket = mock(WebSocket.class);
+        var auth = mock(MindgardAuthentication.class);
+        var client = mock(MindgardWebsocketClient.class);
+        HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null);
+
+        var expectedRequest = new OrchestratorSetupRequest(
+                settings.testName(),
+                1,
+                settings.systemPrompt(),
+                settings.dataset(),
+                null,
+                "llm",
+                "user",
+                "sandbox",
+                null,
+                Arrays.asList(excludedAttack.split(",")),
+                null
+        );
+        
+        Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
+            assertEquals(body, JSON.json(expectedRequest));
+            return publisher;
+        };
+        var response = mock(HttpResponse.class);
+
+        when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
+
+        var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
+
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        when(response.body()).thenReturn(JSON.json(cliInitResponse));
+        when(
+                http
+                        .newWebSocketBuilder()
+                        .subprotocols("json.webpubsub.azure.v1")
+                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+        ).thenReturn(CompletableFuture.completedFuture(websocket));
+
+        var connection = cf.connect(mindgard, auth, settings, l -> {});
+
+        assertEquals(connection, new SandboxConnection(cliInitResponse,websocket,client));
+
+    }
+
+
+    @Test
+    void usesIncludeAttack() throws IOException, InterruptedException {
+        
+        var includedAttack = "PersonGPT";
+        var http = mock(HttpClient.class, Mockito.RETURNS_DEEP_STUBS);
+        var mindgard = mock(Mindgard.class);
+        var websocket = mock(WebSocket.class);
+        var auth = mock(MindgardAuthentication.class);
+        var client = mock(MindgardWebsocketClient.class);
+        HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, includedAttack);
+
+        var expectedRequest = new OrchestratorSetupRequest(
+                settings.testName(),
+                1,
+                settings.systemPrompt(),
+                settings.dataset(),
+                null,
+                "llm",
+                "user",
+                "sandbox",
+                null,
+                null,
+                Arrays.asList(includedAttack.split(","))
+        );
+        
+        Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
+            assertEquals(body, JSON.json(expectedRequest));
+            return publisher;
+        };
+        var response = mock(HttpResponse.class);
+
+        when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
+
+        var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
+
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        when(response.body()).thenReturn(JSON.json(cliInitResponse));
+        when(
+                http
+                        .newWebSocketBuilder()
+                        .subprotocols("json.webpubsub.azure.v1")
+                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+        ).thenReturn(CompletableFuture.completedFuture(websocket));
+
+        var connection = cf.connect(mindgard, auth, settings, l -> {});
+
+        assertEquals(connection, new SandboxConnection(cliInitResponse,websocket,client));
+
+    }
+
+
+    @Test
+    void usesIncludeAndExcludeAttack() throws IOException, InterruptedException {
+        var excludedAttack = "jail_breaking";
+        var includedAttack = "PersonGPT";
+        var http = mock(HttpClient.class, Mockito.RETURNS_DEEP_STUBS);
+        var mindgard = mock(Mindgard.class);
+        var websocket = mock(WebSocket.class);
+        var auth = mock(MindgardAuthentication.class);
+        var client = mock(MindgardWebsocketClient.class);
+        HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, includedAttack);
+
+        var expectedRequest = new OrchestratorSetupRequest(
+                settings.testName(),
+                1,
+                settings.systemPrompt(),
+                settings.dataset(),
+                null,
+                "llm",
+                "user",
+                "sandbox",
+                null,
+                Arrays.asList(excludedAttack.split(",")),
+                Arrays.asList(includedAttack.split(","))
+                
+        );
+        
+        Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
+            assertEquals(body, JSON.json(expectedRequest));
+            return publisher;
+        };
+        var response = mock(HttpResponse.class);
+
+        when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
+
+        var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
+
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        when(response.body()).thenReturn(JSON.json(cliInitResponse));
+        when(
+                http
+                        .newWebSocketBuilder()
+                        .subprotocols("json.webpubsub.azure.v1")
+                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+        ).thenReturn(CompletableFuture.completedFuture(websocket));
+
+        var connection = cf.connect(mindgard, auth, settings, l -> {});
+
+        assertEquals(connection, new SandboxConnection(cliInitResponse,websocket,client));
+
+    }
+
 
 
 }

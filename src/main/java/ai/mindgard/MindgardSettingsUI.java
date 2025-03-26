@@ -19,6 +19,8 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
     private String testName = "burp-suite-test";
     private String dataset = null;
     private String systemPrompt = "Please answer the question: ";
+    private String exclude;
+    private String include;
 
     public MindgardSettingsUI() {
         super(new SpringLayout());
@@ -30,6 +32,8 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
             dataset = Optional.ofNullable(settings.dataset()).orElse(dataset);
             systemPrompt = Optional.ofNullable(settings.systemPrompt()).orElse(systemPrompt);
             customDataset = Optional.ofNullable(settings.customDatasetFilename()).map(File::new).orElse(customDataset);
+            exclude = Optional.ofNullable(settings.exclude()).orElse(exclude);
+            include = Optional.ofNullable(settings.include()).orElse(include);
         } catch (IOException e) {
 
         }
@@ -147,6 +151,31 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
 
         datasetButtons.add(clearButton, constraints);
         inputPanel.add(datasetButtons,gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.weightx = 0;
+        JLabel excludeAttacksLabel = new JLabel("Exclude attack(s):");
+        inputPanel.add(excludeAttacksLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 6;
+        gbc.weightx = 1.0;
+        JTextField excludeAttacksField = new JTextField(exclude, 20);
+        inputPanel.add(excludeAttacksField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.weightx = 0;
+        JLabel includeAttacksLabel = new JLabel("Include attack(s):");
+        inputPanel.add(includeAttacksLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 7;
+        gbc.weightx = 1.0;
+        JTextField includeAttacksField = new JTextField(include, 20);
+        inputPanel.add(includeAttacksField, gbc);
+
         gbc.gridx = 3;
         gbc.gridy = 5;
         gbc.weightx = 1.0;
@@ -158,6 +187,8 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
             systemPrompt = systemPromptField.getText();
             dataset = ((Dataset)datasetField.getSelectedItem()).getDatasetName();
             customDataset = customDatasetField.getSelectedFile();
+            exclude = excludeAttacksField.getText();
+            include =includeAttacksField.getText();
 
             save();
         });
@@ -192,5 +223,15 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
     @Override
     public String customDatasetFilename() {
         return Optional.ofNullable(customDataset).map(File::getAbsolutePath).orElse(null);
+    }
+
+    @Override
+    public String exclude() {
+        return exclude;
+    }
+
+    @Override
+    public String include() {
+        return include;
     }
 }
