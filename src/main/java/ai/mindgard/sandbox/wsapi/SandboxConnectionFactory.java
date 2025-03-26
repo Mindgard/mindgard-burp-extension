@@ -13,7 +13,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -64,6 +66,14 @@ public class SandboxConnectionFactory {
             super(errors.stream().map(CliInitResponse.Error::message).collect(Collectors.joining()));
         }
     }
+
+    private List<String> commaSeperatedToList(String includedOrExcluded) {
+        if (includedOrExcluded != null && includedOrExcluded.length() > 0) {
+            return Arrays.asList(includedOrExcluded.split(","));
+        }
+        return null;
+    } 
+
     private CliInitResponse cliInit(String target, String accessToken, MindgardSettings settings, Log logger) {
         try {
             var params = new OrchestratorSetupRequest(
@@ -75,7 +85,9 @@ public class SandboxConnectionFactory {
                     "llm",
                     "user",
                     "sandbox",
-                    null
+                    null,
+                    commaSeperatedToList(settings.exclude()),
+                    commaSeperatedToList(settings.include())
             );
 
             var cliInit = HttpRequest.newBuilder()

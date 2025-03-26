@@ -1,4 +1,5 @@
 package ai.mindgard.sandbox.wsapi.messages;
+import java.util.List;
 
 public record OrchestratorSetupRequest(
     String target,
@@ -9,5 +10,7 @@ public record OrchestratorSetupRequest(
     String modelType,
     String attackSource,
     String attackPack,
-    Object labels
+    Object labels,
+    List<String> exclude,
+    List<String> include
 ) {}
