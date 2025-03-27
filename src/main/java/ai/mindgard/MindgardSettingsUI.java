@@ -162,6 +162,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         gbc.gridy = 6;
         gbc.weightx = 1.0;
         JTextField excludeAttacksField = new JTextField(exclude, 20);
+        excludeAttacksField.setToolTipText("e.g. AntiGPT,PersonGPT");
         inputPanel.add(excludeAttacksField, gbc);
 
         gbc.gridx = 0;
@@ -174,6 +175,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         gbc.gridy = 7;
         gbc.weightx = 1.0;
         JTextField includeAttacksField = new JTextField(include, 20);
+        includeAttacksField.setToolTipText("e.g. AntiGPT,PersonGPT");
         inputPanel.add(includeAttacksField, gbc);
 
         gbc.gridx = 3;

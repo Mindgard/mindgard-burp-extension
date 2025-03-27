@@ -68,11 +68,13 @@ public class SandboxConnectionFactory {
     }
 
     private List<String> commaSeperatedToList(String includedOrExcluded) {
-        if (includedOrExcluded != null && includedOrExcluded.length() > 0) {
-            return Arrays.asList(includedOrExcluded.split(","));
+        if (includedOrExcluded == null || includedOrExcluded.isEmpty()) {
+            return null;
         }
-        return null;
-    } 
+        return Arrays.stream(includedOrExcluded.split(","))
+                .map(String::trim)
+                .collect(Collectors.toList());
+    }
 
     private CliInitResponse cliInit(String target, String accessToken, MindgardSettings settings, Log logger) {
         try {
