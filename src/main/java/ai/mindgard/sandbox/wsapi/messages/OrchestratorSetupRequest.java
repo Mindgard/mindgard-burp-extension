@@ -12,5 +12,6 @@ public record OrchestratorSetupRequest(
     String attackPack,
     Object labels,
     List<String> exclude,
-    List<String> include
+    List<String> include,
+    Integer prompt_repeats
 ) {}

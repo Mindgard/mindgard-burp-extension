@@ -7,12 +7,14 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.text.NumberFormat;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
 public class MindgardSettingsUI extends JPanel implements MindgardSettings {
+    private static final int DEFAULT_PROMPT_REPEATS = 5;
     private final JFileChooser customDatasetField = new JFileChooser();
     private File customDataset;
     private String selector = "$";
@@ -21,6 +23,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
     private String systemPrompt = "Please answer the question: ";
     private String exclude;
     private String include;
+    private Integer promptRepeats;
 
     public MindgardSettingsUI() {
         super(new SpringLayout());
@@ -34,6 +37,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
             customDataset = Optional.ofNullable(settings.customDatasetFilename()).map(File::new).orElse(customDataset);
             exclude = Optional.ofNullable(settings.exclude()).orElse(exclude);
             include = Optional.ofNullable(settings.include()).orElse(include);
+            promptRepeats = Optional.ofNullable(settings.promptRepeats()).orElse(DEFAULT_PROMPT_REPEATS);
         } catch (IOException e) {
 
         }
@@ -178,6 +182,20 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         includeAttacksField.setToolTipText("e.g. AntiGPT,PersonGPT");
         inputPanel.add(includeAttacksField, gbc);
 
+        gbc.gridx = 0;
+        gbc.gridy = 8;
+        gbc.weightx = 0;
+        JLabel promptRepeatsLabel = new JLabel("Prompt Repeats:");
+        inputPanel.add(promptRepeatsLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 8;
+        gbc.weightx = 1.0;
+        JFormattedTextField promptRepeatsField = new JFormattedTextField(NumberFormat.getIntegerInstance());
+        promptRepeatsField.setValue(promptRepeats);
+        includeAttacksField.setToolTipText("e.g. 3");
+        inputPanel.add(promptRepeatsField, gbc);
+
         gbc.gridx = 3;
         gbc.gridy = 5;
         gbc.weightx = 1.0;
@@ -191,6 +209,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
             customDataset = customDatasetField.getSelectedFile();
             exclude = excludeAttacksField.getText();
             include =includeAttacksField.getText();
+            promptRepeats =(Integer)promptRepeatsField.getValue();
 
             save();
         });
@@ -236,4 +255,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
     public String include() {
         return include;
     }
+
+    @Override
+    public Integer promptRepeats() { return promptRepeats; }
 }
