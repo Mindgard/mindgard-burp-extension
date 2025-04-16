@@ -21,7 +21,9 @@ public interface MindgardSettings {
 
     String include();
 
-    record Settings(String selector, String testName, String dataset, String systemPrompt, String customDatasetFilename, String exclude, String include) implements MindgardSettings {}
+    Integer promptRepeats();
+
+    record Settings(String selector, String testName, String dataset, String systemPrompt, String customDatasetFilename, String exclude, String include, Integer promptRepeats) implements MindgardSettings {}
 
     static File file(String name) {
         String directory = System.getProperty("user.home") + File.separator + ".mindgard";
@@ -31,7 +33,7 @@ public interface MindgardSettings {
 
     default void save() {
         try {
-            Files.write(MindgardSettings.file("burp.json").toPath(), of(JSON.json(new Settings(selector(), testName(), dataset(), systemPrompt(), customDatasetFilename(), exclude(), include()))));
+            Files.write(MindgardSettings.file("burp.json").toPath(), of(JSON.json(new Settings(selector(), testName(), dataset(), systemPrompt(), customDatasetFilename(), exclude(), include(), promptRepeats()))));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

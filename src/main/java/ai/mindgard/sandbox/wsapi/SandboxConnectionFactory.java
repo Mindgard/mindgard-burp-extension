@@ -89,7 +89,8 @@ public class SandboxConnectionFactory {
                     "sandbox",
                     null,
                     commaSeperatedToList(settings.exclude()),
-                    commaSeperatedToList(settings.include())
+                    commaSeperatedToList(settings.include()),
+                    settings.promptRepeats()
             );
 
             var cliInit = HttpRequest.newBuilder()

@@ -42,7 +42,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, null);
         var expectedRequest = new OrchestratorSetupRequest(
             settings.testName(),
             1,
@@ -54,7 +54,8 @@ class SandboxConnectionFactoryTest {
             "sandbox",
             null,
             null,
-            null
+            null,
+                null
         );
         Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
             assertEquals(body, JSON.json(expectedRequest));
@@ -89,7 +90,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, null);
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
                 1,
@@ -99,6 +100,7 @@ class SandboxConnectionFactoryTest {
                 "llm",
                 "user",
                 "sandbox",
+                null,
                 null,
                 null,
                 null
@@ -147,7 +149,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", customDatasetPath.toAbsolutePath().toString(), null, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", customDatasetPath.toAbsolutePath().toString(), null, null, null);
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
                 1,
@@ -157,6 +159,7 @@ class SandboxConnectionFactoryTest {
                 "llm",
                 "user",
                 "sandbox",
+                null,
                 null,
                 null,
                 null
@@ -196,7 +199,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null, null);
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
                 1,
@@ -208,6 +211,7 @@ class SandboxConnectionFactoryTest {
                 "sandbox",
                 null,
                 List.of(excludedAttack),
+                null,
                 null
         );
 
@@ -246,7 +250,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null, null);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
@@ -259,6 +263,7 @@ class SandboxConnectionFactoryTest {
                 "sandbox",
                 null,
                 Arrays.asList("PersonGPT","AntiGPT","DynamicTest"),
+                null,
                 null
         );
         
@@ -298,7 +303,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, includedAttack);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, includedAttack, null);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
@@ -311,7 +316,8 @@ class SandboxConnectionFactoryTest {
                 "sandbox",
                 null,
                 null,
-                List.of("PersonGPT")
+                List.of("PersonGPT"),
+                null
         );
         
         Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
@@ -350,7 +356,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, includedAttack);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, includedAttack, null);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
@@ -363,7 +369,8 @@ class SandboxConnectionFactoryTest {
                 "sandbox",
                 null,
                 List.of("jail_breaking"),
-                List.of("PersonGPT")
+                List.of("PersonGPT"),
+                null
                 
         );
         
@@ -402,7 +409,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null, null);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
@@ -415,7 +422,110 @@ class SandboxConnectionFactoryTest {
                 "sandbox",
                 null,
                 Arrays.asList("PersonGPT","AntiGPT","DynamicTest"),
+                null,
                 null
+        );
+
+        Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
+            assertEquals(body, JSON.json(expectedRequest));
+            return publisher;
+        };
+        var response = mock(HttpResponse.class);
+
+        when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
+
+        var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
+
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        when(response.body()).thenReturn(JSON.json(cliInitResponse));
+        when(
+                http
+                        .newWebSocketBuilder()
+                        .subprotocols("json.webpubsub.azure.v1")
+                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+        ).thenReturn(CompletableFuture.completedFuture(websocket));
+
+        var connection = cf.connect(mindgard, auth, settings, l -> {});
+
+        assertEquals(connection, new SandboxConnection(cliInitResponse,websocket,client));
+
+    }
+
+    @Test
+    void usesPromptRepeatsNotSet() throws IOException, InterruptedException {
+
+        var http = mock(HttpClient.class, Mockito.RETURNS_DEEP_STUBS);
+        var mindgard = mock(Mindgard.class);
+        var websocket = mock(WebSocket.class);
+        var auth = mock(MindgardAuthentication.class);
+        var client = mock(MindgardWebsocketClient.class);
+        HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, null);
+
+        var expectedRequest = new OrchestratorSetupRequest(
+                settings.testName(),
+                1,
+                settings.systemPrompt(),
+                settings.dataset(),
+                null,
+                "llm",
+                "user",
+                "sandbox",
+                null,
+                null,
+                null,
+                null
+        );
+
+        Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
+            assertEquals(body, JSON.json(expectedRequest));
+            return publisher;
+        };
+        var response = mock(HttpResponse.class);
+
+        when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
+
+        var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
+
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        when(response.body()).thenReturn(JSON.json(cliInitResponse));
+        when(
+                http
+                        .newWebSocketBuilder()
+                        .subprotocols("json.webpubsub.azure.v1")
+                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+        ).thenReturn(CompletableFuture.completedFuture(websocket));
+
+        var connection = cf.connect(mindgard, auth, settings, l -> {});
+
+        assertEquals(connection, new SandboxConnection(cliInitResponse,websocket,client));
+
+    }
+
+    @Test
+    void usesPromptRepeatsSetToInteger() throws IOException, InterruptedException {
+
+        var http = mock(HttpClient.class, Mockito.RETURNS_DEEP_STUBS);
+        var mindgard = mock(Mindgard.class);
+        var websocket = mock(WebSocket.class);
+        var auth = mock(MindgardAuthentication.class);
+        var client = mock(MindgardWebsocketClient.class);
+        HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, 3);
+
+        var expectedRequest = new OrchestratorSetupRequest(
+                settings.testName(),
+                1,
+                settings.systemPrompt(),
+                settings.dataset(),
+                null,
+                "llm",
+                "user",
+                "sandbox",
+                null,
+                null,
+                null,
+                3
         );
 
         Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
