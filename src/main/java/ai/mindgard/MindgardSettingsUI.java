@@ -8,13 +8,14 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
 public class MindgardSettingsUI extends JPanel implements MindgardSettings {
-    private static final int DEFAULT_PROMPT_REPEATS = 5;
+    private static final int DEFAULT_PROMPT_REPEATS = 1;
     private final JFileChooser customDatasetField = new JFileChooser();
     private File customDataset;
     private String selector = "$";
@@ -209,8 +210,11 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
             customDataset = customDatasetField.getSelectedFile();
             exclude = excludeAttacksField.getText();
             include =includeAttacksField.getText();
-            promptRepeats =(Integer)promptRepeatsField.getValue();
-
+            try {
+                promptRepeats = ((Number) promptRepeatsField.getFormatter()
+                        .stringToValue(promptRepeatsField.getText()))
+                        .intValue();
+            } catch (ParseException ignored) {}
             save();
         });
         buttonPanel.add(saveButton);
