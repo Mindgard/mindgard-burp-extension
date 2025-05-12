@@ -216,6 +216,13 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
                         .intValue();
             } catch (ParseException ignored) {}
             save();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Mindgard settings updated successfully!",
+                    "Mindgard Extension",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
         });
         buttonPanel.add(saveButton);
 
