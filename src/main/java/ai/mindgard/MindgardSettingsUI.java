@@ -3,13 +3,16 @@ package ai.mindgard;
 import ai.mindgard.sandbox.Dataset;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.Optional;
+import java.util.*;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
@@ -25,6 +28,68 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
     private String exclude;
     private String include;
     private Integer promptRepeats;
+
+    Map<Component, Object> originalValues = new HashMap<>();
+    List<JLabel> changedLabels = new ArrayList<>();
+    private void setupField(JComponent field, JLabel label) {
+        if (field instanceof JTextField textField) {
+            originalValues.put(textField, textField.getText());
+            textField.getDocument().addDocumentListener(new DocumentListener() {
+                @Override
+                public void insertUpdate(DocumentEvent e) { checkChanged(); }
+                public void removeUpdate(DocumentEvent e) { checkChanged(); }
+                public void changedUpdate(DocumentEvent e) { checkChanged(); }
+                private void checkChanged() {
+                    String original = (String) originalValues.get(textField);
+                    if (!textField.getText().equals(original)) {
+                        label.setForeground(Color.MAGENTA);
+                        changedLabels.add(label);
+                    } else {
+                        label.setForeground(Color.BLACK);
+                    }
+                }
+            });
+        } else if (field instanceof JComboBox comboBox) {
+            originalValues.put(comboBox, comboBox.getSelectedItem());
+            comboBox.addActionListener(e -> {
+                Object original = originalValues.get(comboBox);
+                if (!Objects.equals(comboBox.getSelectedItem(), original)) {
+                    label.setForeground(Color.MAGENTA);
+                    changedLabels.add(label);
+                } else {
+                    label.setForeground(Color.BLACK);
+                }
+            });
+        } else if (field instanceof JTextArea textArea) {
+            originalValues.put(textArea, textArea.getText());
+            textArea.getDocument().addDocumentListener(new DocumentListener() {
+                @Override
+                public void insertUpdate(DocumentEvent e) { checkChanged(); }
+                public void removeUpdate(DocumentEvent e) { checkChanged(); }
+                public void changedUpdate(DocumentEvent e) { checkChanged(); }
+                private void checkChanged() {
+                    String original = (String) originalValues.get(textArea);
+                    if (!textArea.getText().equals(original)) {
+                        label.setForeground(Color.MAGENTA);
+                        changedLabels.add(label);
+                    } else {
+                        label.setForeground(Color.BLACK);
+                    }
+                }
+            });
+        } else if (field instanceof JLabel labelField) {
+            originalValues.put(labelField, labelField.getText());
+            labelField.addPropertyChangeListener("text", e -> {
+                String original = (String) originalValues.get(labelField);
+                if (!labelField.getText().equals(original)) {
+                    label.setForeground(Color.MAGENTA);
+                    changedLabels.add(label);
+                } else {
+                    label.setForeground(Color.BLACK);
+                }
+            });
+        }
+    }
 
     public MindgardSettingsUI() {
         super(new SpringLayout());
@@ -64,6 +129,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         gbc.weightx = 1.0;
         JTextField selectorField = new JTextField(selector, 20);
         inputPanel.add(selectorField, gbc);
+        setupField(selectorField, selectorLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 1;
@@ -75,6 +141,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         gbc.weightx = 1.0;
         JTextField testNameField = new JTextField(testName, 20);
         inputPanel.add(testNameField, gbc);
+        setupField(testNameField, testNameLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 2;
@@ -88,6 +155,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         JComboBox<Dataset> datasetField = new JComboBox<>(Dataset.values());
         datasetField.setSelectedIndex(Dataset.indexOfName(dataset));
         inputPanel.add(datasetField, gbc);
+        setupField(datasetField, datasetLabel);
 
 
         gbc.gridx = 0;
@@ -101,6 +169,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         gbc.weightx = 1.0;
         JTextArea systemPromptField = new JTextArea(systemPrompt, 5, 20);
         inputPanel.add(systemPromptField, gbc);
+        setupField(systemPromptField, systemPromptLabel);
 
 
         gbc.gridx = 0;
@@ -156,6 +225,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
 
         datasetButtons.add(clearButton, constraints);
         inputPanel.add(datasetButtons,gbc);
+        setupField(customDatasetPathLabel, customDatasetLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 6;
@@ -169,6 +239,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         JTextField excludeAttacksField = new JTextField(exclude, 20);
         excludeAttacksField.setToolTipText("e.g. AntiGPT,PersonGPT");
         inputPanel.add(excludeAttacksField, gbc);
+        setupField(excludeAttacksField, excludeAttacksLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 7;
@@ -182,6 +253,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         JTextField includeAttacksField = new JTextField(include, 20);
         includeAttacksField.setToolTipText("e.g. AntiGPT,PersonGPT");
         inputPanel.add(includeAttacksField, gbc);
+        setupField(includeAttacksField, includeAttacksLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 8;
@@ -196,6 +268,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         promptRepeatsField.setValue(promptRepeats);
         includeAttacksField.setToolTipText("e.g. 3");
         inputPanel.add(promptRepeatsField, gbc);
+        setupField(promptRepeatsField, promptRepeatsLabel);
 
         gbc.gridx = 3;
         gbc.gridy = 5;
@@ -219,10 +292,16 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
 
             JOptionPane.showMessageDialog(
                     this,
-                    "Mindgard settings updated successfully!",
+                    "Mindgard settings updated successfully!" + "\n" +
+                            "You can view the result of your test at https://sandbox.mindgard.ai/models-assessment" + "\n" +
+                            "with the model name: " + testName,
                     "Mindgard Extension",
                     JOptionPane.INFORMATION_MESSAGE
             );
+
+            changedLabels.forEach(label -> {
+                label.setForeground(Color.BLACK);
+            });
         });
         buttonPanel.add(saveButton);
 
