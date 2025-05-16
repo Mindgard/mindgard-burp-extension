@@ -97,8 +97,8 @@ public class SandboxConnectionFactory {
                     .uri(URI.create("https://api.sandbox.mindgard.ai/api/v1/tests/cli_init"))
                     .header("Content-Type", "application/json")
                     .header("Authorization", "Bearer " + accessToken)
-                    .header("User-Agent", "mindgard-cli/0.65.0")
-                    .header("X-User-Agent", "mindgard-cli/0.65.0")
+                    .header("User-Agent", "mindgard-burp/0.0.8")
+                    .header("X-User-Agent", "mindgard-burp/0.0.8")
                     .POST(bodyPublisherFactory.apply(json(params)))
                     .build();
 
