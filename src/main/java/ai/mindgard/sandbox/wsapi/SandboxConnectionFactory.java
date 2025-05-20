@@ -80,7 +80,7 @@ public class SandboxConnectionFactory {
         try {
             var params = new OrchestratorSetupRequest(
                     target,
-                    1,
+                    settings.parallelism(),
                     settings.systemPrompt(),
                     Dataset.fromFile(settings.customDatasetFilename()).map(JSON::json).orElse(settings.dataset()),
                     Dataset.fromFile(settings.customDatasetFilename()).map(JSON::json).orElse(null),

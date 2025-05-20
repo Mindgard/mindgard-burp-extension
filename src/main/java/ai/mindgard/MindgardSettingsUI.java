@@ -19,6 +19,7 @@ import static java.util.stream.Collectors.joining;
 
 public class MindgardSettingsUI extends JPanel implements MindgardSettings {
     private static final int DEFAULT_PROMPT_REPEATS = 1;
+    private static final int DEFAULT_PARALLELISM = 1;
     private final JFileChooser customDatasetField = new JFileChooser();
     private File customDataset;
     private String selector = "$";
@@ -28,6 +29,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
     private String exclude;
     private String include;
     private Integer promptRepeats;
+    private Integer parallelism;
 
     Map<Component, Object> originalValues = new HashMap<>();
     List<JLabel> changedLabels = new ArrayList<>();
@@ -42,7 +44,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
                 private void checkChanged() {
                     String original = (String) originalValues.get(textField);
                     if (!textField.getText().equals(original)) {
-                        label.setForeground(Color.MAGENTA);
+                        label.setForeground(Color.decode("#CC5500"));
                         changedLabels.add(label);
                     } else {
                         label.setForeground(Color.BLACK);
@@ -54,7 +56,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
             comboBox.addActionListener(e -> {
                 Object original = originalValues.get(comboBox);
                 if (!Objects.equals(comboBox.getSelectedItem(), original)) {
-                    label.setForeground(Color.MAGENTA);
+                    label.setForeground(Color.decode("#CC5500"));
                     changedLabels.add(label);
                 } else {
                     label.setForeground(Color.BLACK);
@@ -70,7 +72,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
                 private void checkChanged() {
                     String original = (String) originalValues.get(textArea);
                     if (!textArea.getText().equals(original)) {
-                        label.setForeground(Color.MAGENTA);
+                        label.setForeground(Color.decode("#CC5500"));
                         changedLabels.add(label);
                     } else {
                         label.setForeground(Color.BLACK);
@@ -82,7 +84,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
             labelField.addPropertyChangeListener("text", e -> {
                 String original = (String) originalValues.get(labelField);
                 if (!labelField.getText().equals(original)) {
-                    label.setForeground(Color.MAGENTA);
+                    label.setForeground(Color.decode("#CC5500"));
                     changedLabels.add(label);
                 } else {
                     label.setForeground(Color.BLACK);
@@ -104,6 +106,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
             exclude = Optional.ofNullable(settings.exclude()).orElse(exclude);
             include = Optional.ofNullable(settings.include()).orElse(include);
             promptRepeats = Optional.ofNullable(settings.promptRepeats()).orElse(DEFAULT_PROMPT_REPEATS);
+            parallelism = Optional.ofNullable(settings.parallelism()).orElse(DEFAULT_PARALLELISM);
         } catch (IOException e) {
 
         }
@@ -266,9 +269,32 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         gbc.weightx = 1.0;
         JFormattedTextField promptRepeatsField = new JFormattedTextField(NumberFormat.getIntegerInstance());
         promptRepeatsField.setValue(promptRepeats);
-        includeAttacksField.setToolTipText("e.g. 3");
+        promptRepeatsField.setToolTipText("e.g. 3");
         inputPanel.add(promptRepeatsField, gbc);
         setupField(promptRepeatsField, promptRepeatsLabel);
+
+        gbc.gridx = 0;
+        gbc.gridy = 9;
+        gbc.weightx = 0;
+        JLabel parallelismLabel = new JLabel("Parallelism:");
+        inputPanel.add(parallelismLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 9;
+        gbc.weightx = 1.0;
+        JFormattedTextField parallelismField = new JFormattedTextField(NumberFormat.getIntegerInstance());
+        parallelismField.setValue(parallelism);
+        parallelismField.setToolTipText("e.g. 1");
+        inputPanel.add(parallelismField, gbc);
+        setupField(parallelismField, parallelismLabel);
+
+        gbc.gridx = 0;
+        gbc.gridy = 10;
+        gbc.gridwidth = 2;
+        gbc.weightx = 0;
+        JLabel parallelismLabelDescription = new JLabel("(Parallelism controls the maximum number of attacks we will launch against your model at once. If your model is stateful, or otherwise would be confused by overlapping attacks, leave this at the default of 1.)");
+        parallelismLabelDescription.setForeground(Color.decode("#CC5500"));
+        inputPanel.add(parallelismLabelDescription, gbc);
 
         gbc.gridx = 3;
         gbc.gridy = 5;
@@ -286,6 +312,10 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
             try {
                 promptRepeats = ((Number) promptRepeatsField.getFormatter()
                         .stringToValue(promptRepeatsField.getText()))
+                        .intValue();
+
+                parallelism = ((Number) parallelismField.getFormatter()
+                        .stringToValue(parallelismField.getText()))
                         .intValue();
             } catch (ParseException ignored) {}
             save();
@@ -348,4 +378,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
 
     @Override
     public Integer promptRepeats() { return promptRepeats; }
+
+    @Override
+    public Integer parallelism() { return parallelism; }
 }

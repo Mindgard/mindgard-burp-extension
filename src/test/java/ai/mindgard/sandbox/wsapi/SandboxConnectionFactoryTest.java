@@ -42,7 +42,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, null, 1);
         var expectedRequest = new OrchestratorSetupRequest(
             settings.testName(),
             1,
@@ -90,7 +90,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, null, 1);
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
                 1,
@@ -149,7 +149,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", customDatasetPath.toAbsolutePath().toString(), null, null, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", customDatasetPath.toAbsolutePath().toString(), null, null, null, 1);
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
                 1,
@@ -199,7 +199,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null, null, 1);
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
                 1,
@@ -250,7 +250,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null, null, 1);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
@@ -303,7 +303,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, includedAttack, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, includedAttack, null, 1);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
@@ -356,7 +356,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, includedAttack, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, includedAttack, null, 1);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
@@ -409,7 +409,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, excludedAttack, null, null, 1);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
@@ -460,7 +460,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, null);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, null, 1);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
@@ -511,11 +511,61 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, 3);
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, 3, 1);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.testName(),
                 1,
+                settings.systemPrompt(),
+                settings.dataset(),
+                null,
+                "llm",
+                "user",
+                "sandbox",
+                null,
+                null,
+                null,
+                3
+        );
+
+        Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> {
+            assertEquals(body, JSON.json(expectedRequest));
+            return publisher;
+        };
+        var response = mock(HttpResponse.class);
+
+        when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
+
+        var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
+
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        when(response.body()).thenReturn(JSON.json(cliInitResponse));
+        when(
+                http
+                        .newWebSocketBuilder()
+                        .subprotocols("json.webpubsub.azure.v1")
+                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+        ).thenReturn(CompletableFuture.completedFuture(websocket));
+
+        var connection = cf.connect(mindgard, auth, settings, l -> {});
+
+        assertEquals(connection, new SandboxConnection(cliInitResponse,websocket,client));
+
+    }
+
+    void usesParallelismSetToInteger() throws IOException, InterruptedException {
+
+        var http = mock(HttpClient.class, Mockito.RETURNS_DEEP_STUBS);
+        var mindgard = mock(Mindgard.class);
+        var websocket = mock(WebSocket.class);
+        var auth = mock(MindgardAuthentication.class);
+        var client = mock(MindgardWebsocketClient.class);
+        HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
+        var settings = new Settings("selector","testName","dataset", "systemPrompt", null, null, null, 3, 4);
+
+        var expectedRequest = new OrchestratorSetupRequest(
+                settings.testName(),
+                4,
                 settings.systemPrompt(),
                 settings.dataset(),
                 null,
