@@ -46,5 +46,5 @@ jobs:
             repo: context.repo.repo,
             release_id: release.data.id,
             name: "app.zip",
-            data: await fs.readFileSync("file: /home/runner/work/mindgard-burp-extension/mindgard-burp-extension/target/mindgard-burp-extension-1.0-SNAPSHOT-jar-with-dependencies.jar")
+            data: await fs.readFileSync("/home/runner/work/mindgard-burp-extension/mindgard-burp-extension/target/mindgard-burp-extension-1.0-SNAPSHOT-jar-with-dependencies.jar")
           });
