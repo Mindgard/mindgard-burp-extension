@@ -149,7 +149,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.weightx = 0;
-        JLabel datasetLabel = new JLabel("Dataset:");
+        JLabel datasetLabel = new JLabel("Domain:");
         inputPanel.add(datasetLabel, gbc);
 
         gbc.gridx = 1;
@@ -292,7 +292,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         gbc.gridy = 10;
         gbc.gridwidth = 2;
         gbc.weightx = 0;
-        JLabel parallelismLabelDescription = new JLabel("(Parallelism controls the maximum number of attacks we will launch against your model at once. If your model is stateful, or otherwise would be confused by overlapping attacks, leave this at the default of 1.)");
+        JLabel parallelismLabelDescription = new JLabel("(Parallelism controls the maximum number of attacks we will launch against your model at once. If your model is stateful or otherwise would be confused by overlapping attacks, leave this at the default of 1.)");
         parallelismLabelDescription.setForeground(Color.decode("#CC5500"));
         inputPanel.add(parallelismLabelDescription, gbc);
 
