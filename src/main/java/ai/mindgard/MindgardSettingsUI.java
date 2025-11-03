@@ -323,7 +323,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
             JOptionPane.showMessageDialog(
                     this,
                     "Mindgard settings updated successfully!" + "\n" +
-                            "You can view the result of your test at https://sandbox.mindgard.ai/models-assessment" + "\n" +
+                            "Tests run using this configuration can be found at https://sandbox.mindgard.ai/results" + "\n" +
                             "with the model name: " + testName,
                     "Mindgard Extension",
                     JOptionPane.INFORMATION_MESSAGE
