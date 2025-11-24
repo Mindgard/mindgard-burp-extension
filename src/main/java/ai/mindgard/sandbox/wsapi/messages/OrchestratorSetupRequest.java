@@ -2,7 +2,7 @@ package ai.mindgard.sandbox.wsapi.messages;
 import java.util.List;
 
 public record OrchestratorSetupRequest(
-    String target,
+    String projectID,
     Integer parallelism,
     String system_prompt,
     String dataset,

@@ -43,7 +43,7 @@ public class SandboxConnectionFactory {
     }
 
     public SandboxConnection connect(Mindgard mindgard, MindgardAuthentication auth, MindgardSettings settings, Log logger) {
-        CliInitResponse cliInitResponse = cliInit(settings.testName(), auth.auth(), settings, logger);
+        CliInitResponse cliInitResponse = cliInit(settings.projectID(), auth.auth(), settings, logger);
         if (cliInitResponse.errors() != null) {
             throw new ConnectionFailedException(cliInitResponse.errors());
         }
@@ -76,10 +76,10 @@ public class SandboxConnectionFactory {
                 .collect(Collectors.toList());
     }
 
-    private CliInitResponse cliInit(String target, String accessToken, MindgardSettings settings, Log logger) {
+    private CliInitResponse cliInit(String projectID, String accessToken, MindgardSettings settings, Log logger) {
         try {
             var params = new OrchestratorSetupRequest(
-                    target,
+                    projectID,
                     settings.parallelism(),
                     settings.systemPrompt(),
                     Dataset.fromFile(settings.customDatasetFilename()).map(JSON::json).orElse(settings.dataset()),
@@ -97,8 +97,8 @@ public class SandboxConnectionFactory {
                     .uri(URI.create("https://api.sandbox.mindgard.ai/api/v1/tests/cli_init"))
                     .header("Content-Type", "application/json")
                     .header("Authorization", "Bearer " + accessToken)
-                    .header("User-Agent", "mindgard-burp/0.0.8")
-                    .header("X-User-Agent", "mindgard-burp/0.0.8")
+                    .header("User-Agent", "mindgard-burp/1.1.0") // TODO: update version dynamically
+                    .header("X-User-Agent", "mindgard-burp/1.1.0") // TODO: update version dynamically
                     .POST(bodyPublisherFactory.apply(json(params)))
                     .build();
 

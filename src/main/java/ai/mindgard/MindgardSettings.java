@@ -9,7 +9,7 @@ import static java.util.List.of;
 public interface MindgardSettings {
     String selector();
 
-    String testName();
+    String projectID();
 
     String dataset();
 
@@ -25,7 +25,7 @@ public interface MindgardSettings {
 
     Integer parallelism();
 
-    record Settings(String selector, String testName, String dataset, String systemPrompt, String customDatasetFilename, String exclude, String include, Integer promptRepeats, Integer parallelism) implements MindgardSettings {}
+    record Settings(String selector, String projectID, String dataset, String systemPrompt, String customDatasetFilename, String exclude, String include, Integer promptRepeats, Integer parallelism) implements MindgardSettings {}
 
     static File file(String name) {
         String directory = System.getProperty("user.home") + File.separator + ".mindgard";
@@ -35,7 +35,7 @@ public interface MindgardSettings {
 
     default void save() {
         try {
-            Files.write(MindgardSettings.file("burp.json").toPath(), of(JSON.json(new Settings(selector(), testName(), dataset(), systemPrompt(), customDatasetFilename(), exclude(), include(), promptRepeats(), parallelism()))));
+            Files.write(MindgardSettings.file("burp.json").toPath(), of(JSON.json(new Settings(selector(), projectID(), dataset(), systemPrompt(), customDatasetFilename(), exclude(), include(), promptRepeats(), parallelism()))));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

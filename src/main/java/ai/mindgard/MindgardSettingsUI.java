@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.*;
+import org.json.JSONObject;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -23,7 +24,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
     private final JFileChooser customDatasetField = new JFileChooser();
     private File customDataset;
     private String selector = "$";
-    private String testName = "burp-suite-test";
+    private String projectID = "burp-suite-test";
     private String dataset = null;
     private String systemPrompt = "Please answer the question: ";
     private String exclude;
@@ -96,19 +97,46 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
     public MindgardSettingsUI() {
         super(new SpringLayout());
 
-        try (Stream<String> lines = Files.lines(MindgardSettings.file("burp.json").toPath())) {
-            Settings settings = JSON.fromJson(lines.collect(joining()), Settings.class);
-            selector = Optional.ofNullable(settings.selector()).orElse(selector);
-            testName = Optional.ofNullable(settings.testName()).orElse(testName);
-            dataset = Optional.ofNullable(settings.dataset()).orElse(dataset);
-            systemPrompt = Optional.ofNullable(settings.systemPrompt()).orElse(systemPrompt);
-            customDataset = Optional.ofNullable(settings.customDatasetFilename()).map(File::new).orElse(customDataset);
-            exclude = Optional.ofNullable(settings.exclude()).orElse(exclude);
-            include = Optional.ofNullable(settings.include()).orElse(include);
-            promptRepeats = Optional.ofNullable(settings.promptRepeats()).orElse(DEFAULT_PROMPT_REPEATS);
-            parallelism = Optional.ofNullable(settings.parallelism()).orElse(DEFAULT_PARALLELISM);
-        } catch (IOException e) {
+        // Validate burp.json before loading settings
+        // This is to help address settings-compatibility issues between Mindgard extension versions
+        File burpJsonFile = MindgardSettings.file("burp.json");
+        if (burpJsonFile.exists()) {
+            Set<String> expectedFields = Set.of(
+                    "selector", "projectID", "dataset", "systemPrompt", "customDatasetFilename",
+                    "exclude", "include", "promptRepeats", "parallelism"
+            );
+            try (Stream<String> lines = Files.lines(burpJsonFile.toPath())) {
+                // Parse JSON and check for any unexpected fields
+                String jsonContent = lines.collect(joining());
+                org.json.JSONObject jsonObject = new org.json.JSONObject(jsonContent);
+                Set<String> actualFields = jsonObject.keySet();
+                Set<String> unexpected = new HashSet<>(actualFields);
+                unexpected.removeAll(expectedFields);
+                if (!unexpected.isEmpty()) {
+                    throw new IllegalArgumentException("burp.json contains unexpected fields: " + unexpected);
+                }
 
+                // Load settings after validation
+                Settings settings = JSON.fromJson(jsonContent, Settings.class);
+                selector = Optional.ofNullable(settings.selector()).orElse(selector);
+                projectID = Optional.ofNullable(settings.projectID()).orElse(projectID);
+                dataset = Optional.ofNullable(settings.dataset()).orElse(dataset);
+                systemPrompt = Optional.ofNullable(settings.systemPrompt()).orElse(systemPrompt);
+                customDataset = Optional.ofNullable(settings.customDatasetFilename()).map(File::new).orElse(customDataset);
+                exclude = Optional.ofNullable(settings.exclude()).orElse(exclude);
+                include = Optional.ofNullable(settings.include()).orElse(include);
+                promptRepeats = Optional.ofNullable(settings.promptRepeats()).orElse(DEFAULT_PROMPT_REPEATS);
+                parallelism = Optional.ofNullable(settings.parallelism()).orElse(DEFAULT_PARALLELISM);
+            } catch (Exception e) {
+                String advice = "Error loading burp.json:\n" + e.getMessage() +
+                        "\n\nIf you see this error, try deleting the Mindgard settings file: " + burpJsonFile.getAbsolutePath() + " and restarting Burp Suite.";
+                JOptionPane.showMessageDialog(
+                        this,
+                        advice,
+                        "Mindgard Settings Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
         }
 
         setLayout(new BorderLayout(10, 10));
@@ -137,14 +165,14 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.weightx = 0;
-        JLabel testNameLabel = new JLabel("Test Name:");
-        inputPanel.add(testNameLabel, gbc);
+        JLabel projectIDLabel = new JLabel("Project ID:");
+        inputPanel.add(projectIDLabel, gbc);
 
         gbc.gridx = 1;
         gbc.weightx = 1.0;
-        JTextField testNameField = new JTextField(testName, 20);
-        inputPanel.add(testNameField, gbc);
-        setupField(testNameField, testNameLabel);
+        JTextField projectIDField = new JTextField(projectID, 20);
+        inputPanel.add(projectIDField, gbc);
+        setupField(projectIDField, projectIDLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 2;
@@ -303,7 +331,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         JButton saveButton = new JButton("Save");
         saveButton.addActionListener((actionEvent) -> {
             selector = selectorField.getText();
-            testName = testNameField.getText();
+            projectID = projectIDField.getText();
             systemPrompt = systemPromptField.getText();
             dataset = ((Dataset)datasetField.getSelectedItem()).getDatasetName();
             customDataset = customDatasetField.getSelectedFile();
@@ -324,7 +352,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
                     this,
                     "Mindgard settings updated successfully!" + "\n" +
                             "Tests run using this configuration can be found at https://sandbox.mindgard.ai/results" + "\n" +
-                            "with the target name: " + testName,
+                            "with the project ID: " + projectID,
                     "Mindgard Extension",
                     JOptionPane.INFORMATION_MESSAGE
             );
@@ -347,8 +375,8 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
     public String selector() {
         return selector;
     }
-    public String testName() {
-        return testName;
+    public String projectID() {
+        return projectID;
     }
 
     @Override
