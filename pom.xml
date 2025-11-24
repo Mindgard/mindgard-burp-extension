@@ -6,7 +6,7 @@
 
     <groupId>ai.mindgard</groupId>
     <artifactId>mindgard-burp-extension</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
@@ -36,6 +36,11 @@
         </plugins>
     </build>
     <dependencies>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20230227</version>
+        </dependency>
 
         <dependency>
             <groupId>net.portswigger.burp.extensions</groupId>
