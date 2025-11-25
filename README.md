@@ -14,4 +14,6 @@ mvn package
 ```
 
 ## Troubleshooting
- - Some config files are stored in ~/.mindgard which can interfere with changes. They can be safely deleted, then the extension reloaded to generate them again.
+ - Settings errors
+   - These can sometimes be caused by changes between extension versions
+   - Try deleting ~/.mindgard/burp.json then restarting Burp Suite to generate a clean settings file
