@@ -346,13 +346,14 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
                         .stringToValue(parallelismField.getText()))
                         .intValue();
             } catch (ParseException ignored) {}
-            save();
+            if (!save(Constants.SETTINGS_FILE_NAME)) {
+                return;
+            }
 
             JOptionPane.showMessageDialog(
                     this,
                     "Mindgard settings updated successfully!" + "\n" +
-                            "Tests run using this configuration can be found at https://sandbox.mindgard.ai/results" + "\n" +
-                            "with the project ID: " + projectID,
+                            "Tests run using this configuration can be found at " + Constants.FRONTEND_URL + "/results?project_id=" + projectID,
                     "Mindgard Extension",
                     JOptionPane.INFORMATION_MESSAGE
             );
