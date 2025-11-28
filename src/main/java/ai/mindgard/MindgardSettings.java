@@ -25,7 +25,14 @@ public interface MindgardSettings {
 
     Integer parallelism();
 
-    record Settings(String selector, String projectID, String dataset, String systemPrompt, String customDatasetFilename, String exclude, String include, Integer promptRepeats, Integer parallelism) implements MindgardSettings {}
+    String mindgardApiUrl();
+
+    String mindgardUrl();
+
+    record Settings(String selector, String projectID, String dataset, String systemPrompt,
+            String customDatasetFilename, String exclude, String include, Integer promptRepeats, Integer parallelism,
+            String mindgardApiUrl, String mindgardUrl) implements MindgardSettings {
+    }
 
     static File file(String name) {
         String directory = System.getProperty("user.home") + File.separator + ".mindgard";
@@ -53,16 +60,20 @@ public interface MindgardSettings {
                 : "There was a problem validating the project ID: " + validationException.getMessage();
             javax.swing.SwingUtilities.invokeLater(() -> {
                 javax.swing.JOptionPane.showMessageDialog(null,
-                    message,
-                    "Mindgard Settings Error",
-                    javax.swing.JOptionPane.ERROR_MESSAGE
-                );
+                        message,
+                        "Mindgard Settings Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE
+                        );
             });
             return false;
         }
 
         try {
-            Files.write(MindgardSettings.file(settingsFileName).toPath(), of(JSON.json(new Settings(selector(), projectID(), dataset(), systemPrompt(), customDatasetFilename(), exclude(), include(), promptRepeats(), parallelism()))));
+            Files.write(
+                MindgardSettings.file(settingsFileName).toPath(),
+                of(JSON.json(
+                        new Settings(selector(), projectID(), dataset(), systemPrompt(), customDatasetFilename(),
+                            exclude(), include(), promptRepeats(), parallelism(), mindgardApiUrl(), mindgardUrl()))));
             return true;
         } catch (IOException e) {
             throw new RuntimeException(e);
