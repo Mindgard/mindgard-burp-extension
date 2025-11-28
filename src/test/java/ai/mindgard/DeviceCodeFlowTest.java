@@ -11,8 +11,8 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import static ai.mindgard.JSON.json;
-import static ai.mindgard.MindgardAuthentication.AUDIENCE;
-import static ai.mindgard.MindgardAuthentication.CLIENT_ID;
+import static ai.mindgard.Constants.AUDIENCE;
+import static ai.mindgard.Constants.CLIENT_ID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;

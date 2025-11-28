@@ -116,8 +116,7 @@ public class SandboxConnectionFactory {
      */
     public boolean validateProject(String projectID) {
         try {
-            Log dummyLog = l -> {}; // Using dummy log for simplicity since MindgardAuthentication.auth() doesn't use logging
-            var auth = new MindgardAuthentication(dummyLog);
+            var auth = new MindgardAuthentication();
 
             var request = HttpRequest.newBuilder()
                     .uri(URI.create(Constants.ORCHESTRATOR_API_URL + "/api/v1/projects/validate/" + projectID))
