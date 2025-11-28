@@ -6,14 +6,12 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.*;
-import org.json.JSONObject;
 import java.util.List;
+import java.io.*;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
@@ -22,6 +20,7 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
     private static final int DEFAULT_PROMPT_REPEATS = 1;
     private static final int DEFAULT_PARALLELISM = 1;
     private final JFileChooser customDatasetField = new JFileChooser();
+    private MindgardServerConfiguration uriManager;
     private File customDataset;
     private String selector = "$";
     private String projectID = "burp-suite-test";
@@ -31,6 +30,9 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
     private String include;
     private Integer promptRepeats;
     private Integer parallelism;
+    private String mindgardUrl;
+    private String mindgardAudience;
+    private String mindgardClientID;
 
     Map<Component, Object> originalValues = new HashMap<>();
     List<JLabel> changedLabels = new ArrayList<>();
@@ -99,11 +101,13 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
 
         // Validate burp.json before loading settings
         // This is to help address settings-compatibility issues between Mindgard extension versions
-        File burpJsonFile = MindgardSettings.file("burp.json");
+        File burpJsonFile = MindgardSettings.file(Constants.SETTINGS_FILE_NAME);
+        Settings settings = null;
         if (burpJsonFile.exists()) {
             Set<String> expectedFields = Set.of(
                     "selector", "projectID", "dataset", "systemPrompt", "customDatasetFilename",
-                    "exclude", "include", "promptRepeats", "parallelism"
+                    "exclude", "include", "promptRepeats", "parallelism", "mindgardAudience", "mindgardUrl",
+                    "mindgardClientID"
             );
             try (Stream<String> lines = Files.lines(burpJsonFile.toPath())) {
                 // Parse JSON and check for any unexpected fields
@@ -117,17 +121,8 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
                 }
 
                 // Load settings after validation
-                Settings settings = JSON.fromJson(jsonContent, Settings.class);
-                selector = Optional.ofNullable(settings.selector()).orElse(selector);
-                projectID = Optional.ofNullable(settings.projectID()).orElse(projectID);
-                dataset = Optional.ofNullable(settings.dataset()).orElse(dataset);
-                systemPrompt = Optional.ofNullable(settings.systemPrompt()).orElse(systemPrompt);
-                customDataset = Optional.ofNullable(settings.customDatasetFilename()).map(File::new).orElse(customDataset);
-                exclude = Optional.ofNullable(settings.exclude()).orElse(exclude);
-                include = Optional.ofNullable(settings.include()).orElse(include);
-                promptRepeats = Optional.ofNullable(settings.promptRepeats()).orElse(DEFAULT_PROMPT_REPEATS);
-                parallelism = Optional.ofNullable(settings.parallelism()).orElse(DEFAULT_PARALLELISM);
-            } catch (Exception e) {
+                settings = JSON.fromJson(jsonContent, Settings.class);
+            } catch (IllegalArgumentException | IOException e) {
                 String advice = "Error loading burp.json:\n" + e.getMessage() +
                         "\n\nIf you see this error, try deleting the Mindgard settings file: " + burpJsonFile.getAbsolutePath() + " and restarting Burp Suite.";
                 JOptionPane.showMessageDialog(
@@ -138,6 +133,23 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
                 );
             }
         }
+
+        this.uriManager = new MindgardServerConfiguration(settings);
+
+        if (settings != null) {
+            selector = Optional.ofNullable(settings.selector()).orElse(selector);
+            projectID = Optional.ofNullable(settings.projectID()).orElse(projectID);
+            dataset = Optional.ofNullable(settings.dataset()).orElse(dataset);
+            systemPrompt = Optional.ofNullable(settings.systemPrompt()).orElse(systemPrompt);
+            customDataset = Optional.ofNullable(settings.customDatasetFilename()).map(File::new).orElse(customDataset);
+            exclude = Optional.ofNullable(settings.exclude()).orElse(exclude);
+            include = Optional.ofNullable(settings.include()).orElse(include);
+            promptRepeats = Optional.ofNullable(settings.promptRepeats()).orElse(DEFAULT_PROMPT_REPEATS);
+            parallelism = Optional.ofNullable(settings.parallelism()).orElse(DEFAULT_PARALLELISM);
+        }
+        mindgardUrl = uriManager.getMindgardUrl();
+        mindgardAudience = uriManager.getMindgardAudience();
+        mindgardClientID = uriManager.getMindgardClientID();
 
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -324,10 +336,72 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
         parallelismLabelDescription.setForeground(Color.decode("#CC5500"));
         inputPanel.add(parallelismLabelDescription, gbc);
 
+        gbc.gridx = 0;
+        gbc.gridy = 11;
+        gbc.weightx = 0;
+        JLabel mindgardUrlLabel = new JLabel("Mindgard URL:");
+        inputPanel.add(mindgardUrlLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        JTextField mindgardUrlField = new JTextField(mindgardUrl, 30);
+        inputPanel.add(mindgardUrlField, gbc);
+        setupField(mindgardUrlField, mindgardUrlLabel);
+
+        gbc.gridx = 0;
+        gbc.gridy = 12;
+        gbc.weightx = 0;
+        JLabel mindgardAudienceLabel = new JLabel("Mindgard Audience:");
+        inputPanel.add(mindgardAudienceLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        JTextField mindgardAudienceField = new JTextField(mindgardAudience, 30);
+        inputPanel.add(mindgardAudienceField, gbc);
+        setupField(mindgardAudienceField, mindgardAudienceLabel);
+
+        gbc.gridx = 0;
+        gbc.gridy = 13;
+        gbc.weightx = 0;
+        JLabel mindgardClientIDLabel = new JLabel("Mindgard Client ID:");
+        inputPanel.add(mindgardClientIDLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        JTextField mindgardClientIDField = new JTextField(mindgardClientID, 30);
+        inputPanel.add(mindgardClientIDField, gbc);
+        setupField(mindgardClientIDField, mindgardClientIDLabel);
+
+
         gbc.gridx = 3;
         gbc.gridy = 5;
         gbc.weightx = 1.0;
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton loginButton = new JButton("Login");
+        loginButton.addActionListener((actionEvent) -> {
+            var auth = new MindgardAuthentication(this);
+            var deviceCode = auth.get_device_code();
+            try {
+                Desktop desktop = Desktop.getDesktop();
+                String url = deviceCode.verification_uri_complete();
+                desktop.browse(new java.net.URI(url));
+                JOptionPane.showMessageDialog(this, "Confirm you see " + deviceCode.user_code());
+                auth.validate_login(deviceCode);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Unable to open browser: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.INFORMATION_MESSAGE
+                        );
+            }
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Mindgard login updated successfully!" +
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+        });
+        buttonPanel.add(loginButton);
         JButton saveButton = new JButton("Save");
         saveButton.addActionListener((actionEvent) -> {
             selector = selectorField.getText();
@@ -336,7 +410,9 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
             dataset = ((Dataset)datasetField.getSelectedItem()).getDatasetName();
             customDataset = customDatasetField.getSelectedFile();
             exclude = excludeAttacksField.getText();
-            include =includeAttacksField.getText();
+            include = includeAttacksField.getText();
+            mindgardAudience = mindgardAudienceField.getText();
+            mindgardUrl = mindgardUrlField.getText();
             try {
                 promptRepeats = ((Number) promptRepeatsField.getFormatter()
                         .stringToValue(promptRepeatsField.getText()))
@@ -346,14 +422,17 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
                         .stringToValue(parallelismField.getText()))
                         .intValue();
             } catch (ParseException ignored) {}
-            if (!save(Constants.SETTINGS_FILE_NAME)) {
+        
+            var saved = save(Constants.SETTINGS_FILE_NAME);
+            if (!saved) {
+                JOptionPane.showMessageDialog(this, "oh again");
                 return;
             }
 
             JOptionPane.showMessageDialog(
                     this,
                     "Mindgard settings updated successfully!" + "\n" +
-                            "Tests run using this configuration can be found at " + Constants.FRONTEND_URL + "/results?project_id=" + projectID,
+                            "Tests run using this configuration can be found at " + uriManager.getMindgardUrl() + "/results?project_id=" + projectID,
                     "Mindgard Extension",
                     JOptionPane.INFORMATION_MESSAGE
             );
@@ -410,4 +489,13 @@ public class MindgardSettingsUI extends JPanel implements MindgardSettings {
 
     @Override
     public Integer parallelism() { return parallelism; }
+
+    @Override
+    public String mindgardAudience() { return mindgardAudience; }
+
+    @Override
+    public String mindgardUrl() { return mindgardUrl; }
+    
+    @Override
+    public String mindgardClientID() { return mindgardClientID; }
 }

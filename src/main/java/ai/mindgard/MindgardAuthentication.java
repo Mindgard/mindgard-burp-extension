@@ -20,28 +20,25 @@ import static ai.mindgard.JSON.json;
 
 public class MindgardAuthentication {
 
-    public static final String CLIENT_ID = "U0OT7yZLJ4GEyabar11BENeQduu4MaNO";
-    public static final String AUDIENCE = "https://marketplace-orchestrator.com";
-    public static final String DOMAIN = "login.sandbox.mindgard.ai";
 
     private final HttpClient http;
     private Function<String, HttpRequest.BodyPublisher> publisher;
     private final Runnable sleep;
     private final DeviceCodeFlow deviceCodeFlow;
-    private Log logger;
     private final File tokenFile;
+    private final MindgardSettings settings;
 
-    public MindgardAuthentication(Log logger) {
-        this(logger, MindgardSettings.file("token.txt"), HttpClient.newHttpClient(), HttpRequest.BodyPublishers::ofString, DeviceCodeFlow::new, MindgardAuthentication::sleep);
+    public MindgardAuthentication(MindgardSettings settings) {
+        this(settings, MindgardSettings.file("token.txt"), HttpClient.newHttpClient(), HttpRequest.BodyPublishers::ofString, DeviceCodeFlow::new, MindgardAuthentication::sleep);
     }
 
-    public MindgardAuthentication(Log logger, File tokenFile, HttpClient http, Function<String,HttpRequest.BodyPublisher> bodyPublisherFactory, DeviceCodeFlow.Factory deviceCodeFlow, Runnable sleep) {
-        this.logger = logger;
+    public MindgardAuthentication(MindgardSettings settings, File tokenFile, HttpClient http, Function<String,HttpRequest.BodyPublisher> bodyPublisherFactory, DeviceCodeFlow.Factory deviceCodeFlow, Runnable sleep) {
         this.tokenFile = tokenFile;
         this.http = http;
         this.publisher = bodyPublisherFactory;
         this.sleep = sleep;
-        this.deviceCodeFlow = deviceCodeFlow.create(http, publisher);
+        this.deviceCodeFlow = deviceCodeFlow.create(settings.serverConfiguration(), http, publisher);
+        this.settings = settings;
     }
 
     public static class AuthenticationFailedException extends RuntimeException {
@@ -58,11 +55,15 @@ public class MindgardAuthentication {
             record AccessToken(String access_token, String id_token, String scope, String expires_in,
                                String token_type) {
             }
+            var serverConfig = settings.serverConfiguration();
 
-            var data = new RefreshToken("refresh_token", CLIENT_ID, AUDIENCE, refreshToken);
+            var data = new RefreshToken("refresh_token",
+                    serverConfig.getMindgardClientID(),
+                    serverConfig.getMindgardAudience(),
+                    refreshToken);
 
             var request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://" + DOMAIN + "/oauth/token"))
+                    .uri(URI.create(serverConfig.getMindgardLoginUrl() + "/oauth/token"))
                     .header("Content-Type", "application/json")
                     .POST(publisher.apply(json(data)))
                     .build();
@@ -75,19 +76,17 @@ public class MindgardAuthentication {
         }
     }
 
-    public void login() {
-        DeviceCodeData deviceCode = deviceCodeFlow.getDeviceCode();
-        logger.log("Click " + deviceCode.verification_uri_complete());
-        logger.log("Confirm you see " + deviceCode.user_code());
-        logger.log("Waiting for auth to complete.");
+    public DeviceCodeData get_device_code() {
+        return deviceCodeFlow.getDeviceCode();
+    }
+
+    public void validate_login(DeviceCodeData deviceCode) {
         Optional<TokenData> tokenData = Optional.empty();
         while ((tokenData = deviceCodeFlow.getToken(deviceCode)).isEmpty()) {
             sleep.run();
         }
-        logger.log("Validating token");
         deviceCodeFlow.validateIdToken(tokenData.get().id_token());
         store(tokenData.get().refresh_token());
-        logger.log("Authenticated!");
     }
 
     private void store(String refreshToken) {

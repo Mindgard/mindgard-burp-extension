@@ -5,6 +5,7 @@ import ai.mindgard.MindgardAuthentication;
 import ai.mindgard.MindgardSettings;
 import ai.mindgard.sandbox.wsapi.SandboxConnection;
 import ai.mindgard.sandbox.wsapi.SandboxConnectionFactory;
+import ai.mindgard.MindgardServerConfiguration;
 
 import java.net.http.HttpClient;
 import java.util.List;
@@ -18,6 +19,7 @@ public class Mindgard {
     private final Log logger;
     private final MindgardAuthentication auth;
     private MindgardSettings settings;
+    private MindgardServerConfiguration uriManager;
     private final Supplier<SandboxConnectionFactory> connectionFactory;
     private BlockingDeque<Probe> newProbes = new LinkedBlockingDeque<>();
     private Pending pending = new Pending();
@@ -27,7 +29,7 @@ public class Mindgard {
     private SandboxConnection connection;
 
     public Mindgard(Log logger, MindgardAuthentication auth, MindgardSettings settings) {
-        this(logger, auth, settings, () -> new SandboxConnectionFactory(HttpClient.newHttpClient()));
+        this(logger, auth, settings, () -> new SandboxConnectionFactory(settings, HttpClient.newHttpClient()));
     }
 
     public Mindgard(Log logger, MindgardAuthentication auth, MindgardSettings settings, Supplier<SandboxConnectionFactory> connectionFactory) {
@@ -35,6 +37,7 @@ public class Mindgard {
         this.auth = auth;
         this.settings = settings;
         this.connectionFactory = connectionFactory;
+        this.uriManager = new MindgardServerConfiguration(this.settings);
     }
 
     public void startGeneratingProbes(){

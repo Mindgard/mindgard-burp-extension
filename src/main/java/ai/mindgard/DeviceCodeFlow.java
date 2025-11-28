@@ -16,23 +16,27 @@ import java.util.function.Function;
 
 import static ai.mindgard.JSON.fromJson;
 import static ai.mindgard.JSON.json;
-import static ai.mindgard.MindgardAuthentication.*;
 
 public class DeviceCodeFlow {
     private final HttpClient http;
     private final Function<String, HttpRequest.BodyPublisher> publisher;
+    private MindgardServerConfiguration serverConfig;
 
     public interface Factory {
-        DeviceCodeFlow create(HttpClient http, Function<String,HttpRequest.BodyPublisher> publisher);
+        DeviceCodeFlow create(MindgardServerConfiguration serverConfig, HttpClient http,
+                Function<String, HttpRequest.BodyPublisher> publisher);
     }
-    public DeviceCodeFlow(HttpClient http, Function<String,HttpRequest.BodyPublisher> publisher) {
+
+    public DeviceCodeFlow(MindgardServerConfiguration serverConfig, HttpClient http,
+            Function<String, HttpRequest.BodyPublisher> publisher) {
         this.http = http;
         this.publisher = publisher;
+        this.serverConfig = serverConfig;
     }
 
     public void validateIdToken(String idToken) {
         try {
-            String issuer = "https://" + DOMAIN + "/";
+            String issuer = serverConfig.getMindgardLoginUrl() + "/";
 
             JwkProvider jwkProvider = new JwkProviderBuilder(issuer).build();
 
@@ -43,7 +47,7 @@ public class DeviceCodeFlow {
             Algorithm algorithm = Algorithm.RSA256(publicKey, null);
             JWTVerifier verifier = JWT.require(algorithm)
                     .withIssuer(issuer)
-                    .withAudience(CLIENT_ID)
+                    .withAudience(serverConfig.getMindgardClientID())
                     .build();
 
             verifier.verify(idToken);
@@ -54,18 +58,27 @@ public class DeviceCodeFlow {
         }
     }
 
-    public record DeviceCodePayload(String client_id, String scope, String audience){
-        public static DeviceCodePayload INSTANCE = new DeviceCodePayload(CLIENT_ID, "openid profile email offline_access", AUDIENCE);
+    public record DeviceCodePayload(String client_id, String scope, String audience) {
     }
-    public record DeviceCodeData(String verification_uri, String verification_uri_complete, String user_code, String device_code, String expires_in, String interval) {}
 
-    public DeviceCodeData getDeviceCode() {;
-        var request = HttpRequest.newBuilder()
-                .uri(URI.create("https://" + DOMAIN + "/oauth/device/code"))
-                .header("Content-Type", "application/json")
-                .POST(publisher.apply(json(DeviceCodePayload.INSTANCE)))
-                .build();
+    public DeviceCodePayload createDeviceCodePayload() {
+        return new DeviceCodePayload(
+                serverConfig.getMindgardClientID(),
+                "openid profile email offline_access",
+                serverConfig.getMindgardAudience());
+    }
+
+    public record DeviceCodeData(String verification_uri, String verification_uri_complete, String user_code,
+            String device_code, String expires_in, String interval) {
+    }
+
+    public DeviceCodeData getDeviceCode() {
         try {
+            var request = HttpRequest.newBuilder()
+                    .uri(URI.create(serverConfig.getMindgardLoginUrl() + "/oauth/device/code"))
+                    .header("Content-Type", "application/json")
+                    .POST(publisher.apply(json(createDeviceCodePayload())))
+                    .build();
             var response = http.send(request, HttpResponse.BodyHandlers.ofString());
             return fromJson(response.body(), DeviceCodeData.class);
         } catch (Exception e) {
@@ -74,23 +87,26 @@ public class DeviceCodeFlow {
 
     }
 
+    public record TokenPayload(String grant_type, String device_code, String client_id, String audience) {
+    }
 
-    public record TokenPayload(String grant_type, String device_code, String client_id, String audience) {}
-    public record TokenData(String refresh_token, String id_token, String error_description, String error, String access_token, String scope, String expires_in, String token_type) {}
+    public record TokenData(String refresh_token, String id_token, String error_description, String error,
+            String access_token, String scope, String expires_in, String token_type) {
+    }
+
     public Optional<TokenData> getToken(DeviceCodeData code) {
         var tokenPayload = new TokenPayload(
                 "urn:ietf:params:oauth:grant-type:device_code",
                 code.device_code(),
-                CLIENT_ID,
-                AUDIENCE
-        );
+                serverConfig.getMindgardClientID(),
+                serverConfig.getMindgardAudience());
 
-        var request = HttpRequest.newBuilder()
-                .uri(URI.create("https://" + DOMAIN + "/oauth/token"))
-                .header("Content-Type", "application/json")
-                .POST(publisher.apply(json(tokenPayload)))
-                .build();
         try {
+            var request = HttpRequest.newBuilder()
+                    .uri(URI.create(serverConfig.getMindgardLoginUrl() + "/oauth/token"))
+                    .header("Content-Type", "application/json")
+                    .POST(publisher.apply(json(tokenPayload)))
+                    .build();
             var response = http.send(request, HttpResponse.BodyHandlers.ofString());
             return response.statusCode() >= 400
                     ? Optional.empty()

@@ -16,7 +16,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,19 +27,21 @@ public class SandboxConnectionFactory {
     private final HttpClient http;
     private final Function<String, HttpRequest.BodyPublisher> bodyPublisherFactory;
     private final MindgardWebsocketClient.Factory clientFactory;
+    private MindgardSettings settings;
 
-    public SandboxConnectionFactory() {
-        this(HttpClient.newHttpClient(), HttpRequest.BodyPublishers::ofString, MindgardWebsocketClient::new);
+    public SandboxConnectionFactory(MindgardSettings settings) {
+        this(settings, HttpClient.newHttpClient(), HttpRequest.BodyPublishers::ofString, MindgardWebsocketClient::new);
     }
 
-    public SandboxConnectionFactory(HttpClient http, Function<String, HttpRequest.BodyPublisher> bodyPublisherFactory, MindgardWebsocketClient.Factory clientFactory) {
+    public SandboxConnectionFactory(MindgardSettings settings, HttpClient http, Function<String, HttpRequest.BodyPublisher> bodyPublisherFactory, MindgardWebsocketClient.Factory clientFactory) {
         this.http = http;
         this.bodyPublisherFactory = bodyPublisherFactory;
         this.clientFactory = clientFactory;
+        this.settings = settings;
     }
 
-    public SandboxConnectionFactory(HttpClient http) {
-        this(http, HttpRequest.BodyPublishers::ofString, MindgardWebsocketClient::new);
+    public SandboxConnectionFactory(MindgardSettings settings, HttpClient http) {
+        this(settings, http, HttpRequest.BodyPublishers::ofString, MindgardWebsocketClient::new);
     }
 
     public SandboxConnection connect(Mindgard mindgard, MindgardAuthentication auth, MindgardSettings settings, Log logger) {
@@ -95,7 +96,7 @@ public class SandboxConnectionFactory {
             );
 
             var cliInit = HttpRequest.newBuilder()
-                    .uri(URI.create(Constants.ORCHESTRATOR_API_URL + "/api/v1/tests/cli_init"))
+                    .uri(URI.create(settings.serverConfiguration().getMindgardApiUrl() + "/api/v1/tests/cli_init"))
                     .header("Content-Type", "application/json")
                     .header("Authorization", "Bearer " + accessToken)
                     .header("User-Agent", "mindgard-burp/1.1.0") // TODO: update version dynamically
@@ -114,13 +115,12 @@ public class SandboxConnectionFactory {
      * Validates whether a given project exists for the current user
      * Returns true if valid, false otherwise.
      */
-    public boolean validateProject(String projectID) {
+    public boolean validateProject(MindgardSettings settings, String projectID) {
         try {
-            Log dummyLog = l -> {}; // Using dummy log for simplicity since MindgardAuthentication.auth() doesn't use logging
-            var auth = new MindgardAuthentication(dummyLog);
+            var auth = new MindgardAuthentication(settings);
 
             var request = HttpRequest.newBuilder()
-                    .uri(URI.create(Constants.ORCHESTRATOR_API_URL + "/api/v1/projects/validate/" + projectID))
+                    .uri(URI.create(settings.serverConfiguration().getMindgardApiUrl() + "/api/v1/projects/validate/" + projectID))
                     .header("Accept", "application/json")
                     .header("Authorization", "Bearer " + auth.auth())
                     .GET()
