@@ -1,5 +1,6 @@
 package ai.mindgard.sandbox.wsapi;
 
+import ai.mindgard.Constants;
 import ai.mindgard.JSON;
 import ai.mindgard.Log;
 import ai.mindgard.MindgardAuthentication;
@@ -94,7 +95,7 @@ public class SandboxConnectionFactory {
             );
 
             var cliInit = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.sandbox.mindgard.ai/api/v1/tests/cli_init"))
+                    .uri(URI.create(Constants.ORCHESTRATOR_API_URL + "/api/v1/tests/cli_init"))
                     .header("Content-Type", "application/json")
                     .header("Authorization", "Bearer " + accessToken)
                     .header("User-Agent", "mindgard-burp/1.1.0") // TODO: update version dynamically
@@ -106,6 +107,36 @@ public class SandboxConnectionFactory {
             return fromJson(cliInitResponse.body(), CliInitResponse.class);
         } catch (Exception e) {
             throw new ConnectionFailedException(e);
+        }
+    }
+
+    /**
+     * Validates whether a given project exists for the current user
+     * Returns true if valid, false otherwise.
+     */
+    public boolean validateProject(String projectID) {
+        try {
+            Log dummyLog = l -> {}; // Using dummy log for simplicity since MindgardAuthentication.auth() doesn't use logging
+            var auth = new MindgardAuthentication(dummyLog);
+
+            var request = HttpRequest.newBuilder()
+                    .uri(URI.create(Constants.ORCHESTRATOR_API_URL + "/api/v1/projects/validate/" + projectID))
+                    .header("Accept", "application/json")
+                    .header("Authorization", "Bearer " + auth.auth())
+                    .GET()
+                    .build();
+
+            var response = http.send(request, HttpResponse.BodyHandlers.ofString());
+            var json = JSON.fromJson(response.body(), java.util.Map.class);
+            Object validObj = json.get("valid");
+            if (validObj instanceof Boolean) {
+                return (Boolean) validObj;
+            } else if (validObj instanceof String) {
+                return Boolean.parseBoolean((String) validObj);
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
         }
     }
 }
