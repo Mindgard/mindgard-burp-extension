@@ -12,7 +12,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class MindgardTest {
+class MindgardWebSocketPromptsTest {
 
     @Test
     void generatedProbesFromSandboxAreEnqueuedUntilSentToTargetAppAndThenRemainPendingUntilReplySentToSandbox() {
@@ -22,17 +22,15 @@ class MindgardTest {
         var connection = mock(SandboxConnection.class);
         Log log = l -> {
         };
-        var mg = new Mindgard(log, auth, settings, () -> connectionFactory);
+        var mg = new MindgardWebSocketPrompts(log, auth, settings, 1L, () -> connectionFactory);
         when(connectionFactory.connect(mg, auth, settings, log)).thenReturn(connection);
 
         // Ask sandbox to generate probes
         assertFalse(mg.isStarted());
-        assertTrue(mg.hasMoreProbes());
 
         mg.startGeneratingProbes();
 
         assertTrue(mg.isStarted());
-        assertTrue(mg.hasMoreProbes());
         assertTrue(mg.pendingProbes().isEmpty());
 
         // Simulate a new probe coming in from Sandbox
@@ -42,16 +40,14 @@ class MindgardTest {
 
         assertTrue(mg.pendingProbes().isEmpty());
         assertTrue(mg.isStarted());
-        assertTrue(mg.hasMoreProbes());
 
         // Probe becomes available to send to the target application
 
-        Probe actual = mg.poll(1L).get();
+        Probe actual = mg.poll().get();
 
         assertEquals(expected, actual);
         assertEquals(List.of(actual), mg.pendingProbes());
         assertTrue(mg.isStarted());
-        assertFalse(mg.hasMoreProbes());
 
         // When reply comes in from the target application the probe is no longer retained
 
@@ -69,17 +65,15 @@ class MindgardTest {
         var connection = mock(SandboxConnection.class);
         Log log = l -> {
         };
-        var mg = new Mindgard(log, auth, settings, () -> connectionFactory);
+        var mg = new MindgardWebSocketPrompts(log, auth, settings, 60L, () -> connectionFactory);
         when(connectionFactory.connect(mg, auth, settings, log)).thenReturn(connection);
 
         assertFalse(mg.isStarted());
-        assertTrue(mg.hasMoreProbes());
 
         mg.push(new Probe("123", "Prompt"));
         mg.startGeneratingProbes();
 
         assertTrue(mg.isStarted());
-        assertTrue(mg.hasMoreProbes());
         assertTrue(mg.pendingProbes().isEmpty());
 
         mg.reset();

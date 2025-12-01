@@ -2,10 +2,13 @@ package ai.mindgard;
 
 import ai.mindgard.burp.generators.GeneratorFactory;
 import ai.mindgard.sandbox.Mindgard;
+import ai.mindgard.sandbox.MindgardWebSocketPrompts;
 import ai.mindgard.burp.generators.MindgardGenerator;
 import ai.mindgard.burp.MindgardHttpHandler;
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
+
+import java.time.Instant;
 
 public class MindgardExtension implements BurpExtension {
     @Override
@@ -14,7 +17,7 @@ public class MindgardExtension implements BurpExtension {
         MindgardSettingsUI settings = new MindgardSettingsUI();
         Log logger = api.logging()::logToOutput;
         var auth = new MindgardAuthentication(logger);
-        Mindgard mg = new Mindgard(logger, auth, settings);
+        Mindgard mg = new MindgardWebSocketPrompts(logger, auth, settings, 60L);
 
         try {
             auth.auth();
@@ -28,7 +31,7 @@ public class MindgardExtension implements BurpExtension {
 
         api.userInterface().registerSuiteTab("Mindgard", settings);
 
-        api.logging().logToOutput("Loaded Mindgard Generators");
+        api.logging().logToOutput("["+ Instant.now() + "] Loaded Mindgard Generators");
     }
 
 }

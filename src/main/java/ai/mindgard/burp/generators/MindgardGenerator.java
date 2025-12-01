@@ -6,12 +6,14 @@ import burp.api.montoya.intruder.GeneratedPayload;
 import burp.api.montoya.intruder.IntruderInsertionPoint;
 import burp.api.montoya.intruder.PayloadGenerator;
 
+import java.time.Instant;
+
 public class MindgardGenerator implements PayloadGenerator {
     private final Mindgard mindgard;
     private final Log logger;
 
     public MindgardGenerator(Mindgard mindgard, Log logger) {
-        logger.log("Loading Generator");
+        logger.log("["+ Instant.now() + "] Loading Generator");
         mindgard.reset();
         this.mindgard = mindgard;
         this.logger = logger;
@@ -32,7 +34,7 @@ public class MindgardGenerator implements PayloadGenerator {
     }
 
     private GeneratedPayload end() {
-        logger.log("END");
+        logger.log("["+ Instant.now() + "] END");
         mindgard.reset();
         return GeneratedPayload.end();
     }
