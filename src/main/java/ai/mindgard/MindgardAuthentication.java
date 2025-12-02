@@ -28,7 +28,14 @@ public class MindgardAuthentication {
     private final File tokenFile;
 
     public MindgardAuthentication(Log logger) {
-        this(logger, MindgardSettings.file("token.txt"), HttpClient.newHttpClient(), HttpRequest.BodyPublishers::ofString, DeviceCodeFlow::new, MindgardAuthentication::sleep);
+        this(
+            logger, 
+            MindgardSettings.loadFile("token.txt"), 
+            HttpClient.newHttpClient(), 
+            HttpRequest.BodyPublishers::ofString, 
+            DeviceCodeFlow::new, 
+            MindgardAuthentication::sleep
+        );
     }
 
     public MindgardAuthentication(Log logger, File tokenFile, HttpClient http, Function<String,HttpRequest.BodyPublisher> bodyPublisherFactory, DeviceCodeFlow.Factory deviceCodeFlow, Runnable sleep) {

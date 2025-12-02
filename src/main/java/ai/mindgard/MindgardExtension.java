@@ -14,7 +14,8 @@ public class MindgardExtension implements BurpExtension {
     @Override
     public void initialize(MontoyaApi api) {
         api.extension().setName(getClass().getSimpleName());
-        MindgardSettingsUI settings = new MindgardSettingsUI();
+        MindgardSettings settings = MindgardSettings.loadOrCreate(Constants.SETTINGS_FILE_NAME);
+        MindgardSettingsUI userInterface = new MindgardSettingsUI();
         Log logger = api.logging()::logToOutput;
         var auth = new MindgardAuthentication(logger);
         Mindgard mg = new MindgardWebSocketPrompts(logger, auth, settings, 60L);
@@ -28,9 +29,7 @@ public class MindgardExtension implements BurpExtension {
 
         api.intruder().registerPayloadGeneratorProvider(new GeneratorFactory<>(MindgardGenerator.class, () -> new MindgardGenerator(mg, logger)));
         api.http().registerHttpHandler(new MindgardHttpHandler(mg, settings, logger));
-
-        api.userInterface().registerSuiteTab("Mindgard", settings);
-
+        api.userInterface().registerSuiteTab("Mindgard", userInterface);
         api.logging().logToOutput("["+ Instant.now() + "] Loaded Mindgard Generators");
     }
 
