@@ -32,7 +32,7 @@ public class DeviceCodeFlow {
 
     public void validateIdToken(String idToken) {
         try {
-            String issuer = "https://" + DOMAIN + "/";
+            String issuer = Constants.LOGIN_DOMAIN + "/";
 
             JwkProvider jwkProvider = new JwkProviderBuilder(issuer).build();
 
@@ -43,7 +43,7 @@ public class DeviceCodeFlow {
             Algorithm algorithm = Algorithm.RSA256(publicKey, null);
             JWTVerifier verifier = JWT.require(algorithm)
                     .withIssuer(issuer)
-                    .withAudience(CLIENT_ID)
+                    .withAudience(Constants.CLIENT_ID)
                     .build();
 
             verifier.verify(idToken);
@@ -55,13 +55,13 @@ public class DeviceCodeFlow {
     }
 
     public record DeviceCodePayload(String client_id, String scope, String audience){
-        public static DeviceCodePayload INSTANCE = new DeviceCodePayload(CLIENT_ID, "openid profile email offline_access", AUDIENCE);
+        public static DeviceCodePayload INSTANCE = new DeviceCodePayload(Constants.CLIENT_ID, "openid profile email offline_access", Constants.AUDIENCE);
     }
     public record DeviceCodeData(String verification_uri, String verification_uri_complete, String user_code, String device_code, String expires_in, String interval) {}
 
     public DeviceCodeData getDeviceCode() {;
         var request = HttpRequest.newBuilder()
-                .uri(URI.create("https://" + DOMAIN + "/oauth/device/code"))
+                .uri(URI.create(Constants.LOGIN_DOMAIN + "/oauth/device/code"))
                 .header("Content-Type", "application/json")
                 .POST(publisher.apply(json(DeviceCodePayload.INSTANCE)))
                 .build();
@@ -81,12 +81,12 @@ public class DeviceCodeFlow {
         var tokenPayload = new TokenPayload(
                 "urn:ietf:params:oauth:grant-type:device_code",
                 code.device_code(),
-                CLIENT_ID,
-                AUDIENCE
+                Constants.CLIENT_ID,
+                Constants.AUDIENCE
         );
 
         var request = HttpRequest.newBuilder()
-                .uri(URI.create("https://" + DOMAIN + "/oauth/token"))
+                .uri(URI.create(Constants.LOGIN_DOMAIN + "/oauth/token"))
                 .header("Content-Type", "application/json")
                 .POST(publisher.apply(json(tokenPayload)))
                 .build();

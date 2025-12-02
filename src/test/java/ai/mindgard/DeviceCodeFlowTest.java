@@ -11,8 +11,6 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import static ai.mindgard.JSON.json;
-import static ai.mindgard.MindgardAuthentication.AUDIENCE;
-import static ai.mindgard.MindgardAuthentication.CLIENT_ID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -46,8 +44,8 @@ class DeviceCodeFlowTest {
         var tokenPayload = new DeviceCodeFlow.TokenPayload(
                 "urn:ietf:params:oauth:grant-type:device_code",
                 deviceCodeData.device_code(),
-                CLIENT_ID,
-                AUDIENCE
+                Constants.CLIENT_ID,
+                Constants.AUDIENCE
         );
         var tokenData = new DeviceCodeFlow.TokenData("refresh_token", "id_token",null,null,"access_token","scope","expires_in","token_type");
         var http = mock(HttpClient.class);

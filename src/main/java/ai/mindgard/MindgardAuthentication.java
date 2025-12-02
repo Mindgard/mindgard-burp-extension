@@ -20,10 +20,6 @@ import static ai.mindgard.JSON.json;
 
 public class MindgardAuthentication {
 
-    public static final String CLIENT_ID = "U0OT7yZLJ4GEyabar11BENeQduu4MaNO";
-    public static final String AUDIENCE = "https://marketplace-orchestrator.com";
-    public static final String DOMAIN = "login.sandbox.mindgard.ai";
-
     private final HttpClient http;
     private Function<String, HttpRequest.BodyPublisher> publisher;
     private final Runnable sleep;
@@ -59,10 +55,10 @@ public class MindgardAuthentication {
                                String token_type) {
             }
 
-            var data = new RefreshToken("refresh_token", CLIENT_ID, AUDIENCE, refreshToken);
+            var data = new RefreshToken("refresh_token", Constants.CLIENT_ID, Constants.AUDIENCE, refreshToken);
 
             var request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://" + DOMAIN + "/oauth/token"))
+                    .uri(URI.create(Constants.LOGIN_DOMAIN + "/oauth/token"))
                     .header("Content-Type", "application/json")
                     .POST(publisher.apply(json(data)))
                     .build();
