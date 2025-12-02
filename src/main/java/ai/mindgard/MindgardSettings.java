@@ -3,8 +3,6 @@ package ai.mindgard;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Set;
-import java.util.stream.Stream;
 import static java.util.List.of;
 import org.json.JSONObject;
 import java.util.logging.Logger;

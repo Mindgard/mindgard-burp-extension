@@ -15,7 +15,8 @@ import java.util.List;
 public class MindgardSettingsUI extends JPanel {
     private final JFileChooser customDatasetField = new JFileChooser();
     private File customDataset;
-    private MindgardSettings settings;
+    private MindgardSettings settings = MindgardSettingsManager.getSettings();
+
 
     Map<Component, Object> originalValues = new HashMap<>();
     List<JLabel> changedLabels = new ArrayList<>();
@@ -82,7 +83,8 @@ public class MindgardSettingsUI extends JPanel {
 
     public MindgardSettingsUI() {
         super(new SpringLayout());
-        this.settings = MindgardSettings.loadOrCreate(Constants.SETTINGS_FILE_NAME);
+        this.settings = MindgardSettingsManager.getSettings();
+
 
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -278,7 +280,7 @@ public class MindgardSettingsUI extends JPanel {
             try {
                 Integer promptRepeats = ((Number)promptRepeatsField.getFormatter().stringToValue(promptRepeatsField.getText())).intValue();
                 Integer parallelism = ((Number)parallelismField.getFormatter().stringToValue(parallelismField.getText())).intValue();
-                settings = new MindgardSettings(
+                MindgardSettings newSettings = new MindgardSettings(
                     selectorField.getText(),
                     projectIDField.getText(),
                     ((Dataset)datasetField.getSelectedItem()).getDatasetName(), 
@@ -289,6 +291,8 @@ public class MindgardSettingsUI extends JPanel {
                     promptRepeats,
                     parallelism
                 );
+                MindgardSettingsManager.updateSettings(newSettings);
+                this.settings = MindgardSettingsManager.getSettings();
             } catch (ParseException e) {
                 JOptionPane.showMessageDialog(
                     this,
