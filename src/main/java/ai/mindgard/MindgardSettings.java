@@ -78,7 +78,7 @@ public record MindgardSettings(
      * @return a settings record containing the contents of the settings file, or defaults if it doesn't exist
      */
     public static MindgardSettings loadOrCreate(String filename) {
-        File settingsFile = MindgardSettings.loadFile(Constants.SETTINGS_FILE_NAME);
+        File settingsFile = MindgardSettings.loadFile(filename);
         String fileContents;
         if (settingsFile.exists()) {
             try {
@@ -137,7 +137,7 @@ public record MindgardSettings(
         Exception validationException = null;
         try {
             SandboxConnectionFactory validator = new SandboxConnectionFactory();
-            valid = validator.validateProject(projectID(), addSubdomainToURI(url(), "api"));
+            valid = validator.validateProject(projectID(), addSubdomainToURI(url(), "api"), this);
         } catch (Exception e) {
             valid = false;
             validationException = e;

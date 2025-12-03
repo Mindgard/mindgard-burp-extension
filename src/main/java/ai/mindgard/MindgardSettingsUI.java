@@ -23,90 +23,100 @@ public class MindgardSettingsUI extends JPanel {
         
         super(new SpringLayout());
 
-        this.settings = MindgardSettingsManager.getSettings();
+        this.settings = getSettings();
 
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
+        JTabbedPane tabs = new JTabbedPane();
         JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JPanel inputPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.insets = new Insets(0, 0, 10, 5);
+        JPanel testConfigPanel = new JPanel(new GridBagLayout());
+        JPanel loginPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints inputgbc = new GridBagConstraints();
+        GridBagConstraints logingbc = new GridBagConstraints();
+        inputgbc.gridx = 0;
+        logingbc.gridx = 0;
+
+        inputgbc.gridy = 0;
+        logingbc.gridy = 0;
+
+        inputgbc.anchor = GridBagConstraints.WEST;
+        logingbc.anchor = GridBagConstraints.WEST;
+
+        inputgbc.insets = new Insets(0, 0, 10, 5);
+        logingbc.insets = new Insets(0, 0, 10, 5);
+
 
         JLabel selectorLabel = new JLabel("Selector:");
-        inputPanel.add(selectorLabel, gbc);
+        testConfigPanel.add(selectorLabel, inputgbc);
 
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
+        inputgbc.gridx = 1;
+        inputgbc.fill = GridBagConstraints.HORIZONTAL;
+        inputgbc.weightx = 1.0;
         JTextField selectorField = new JTextField(settings.selector(), 20);
-        inputPanel.add(selectorField, gbc);
+        testConfigPanel.add(selectorField, inputgbc);
         setupUIChangeTracking(selectorField, selectorLabel);
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.weightx = 0;
+        inputgbc.gridx = 0;
+        inputgbc.gridy = 1;
+        inputgbc.weightx = 0;
         JLabel projectIDLabel = new JLabel("Project ID:");
-        inputPanel.add(projectIDLabel, gbc);
+        testConfigPanel.add(projectIDLabel, inputgbc);
 
-        gbc.gridx = 1;
-        gbc.weightx = 1.0;
+        inputgbc.gridx = 1;
+        inputgbc.weightx = 1.0;
         JTextField projectIDField = new JTextField(settings.projectID(), 20);
-        inputPanel.add(projectIDField, gbc);
+        testConfigPanel.add(projectIDField, inputgbc);
         setupUIChangeTracking(projectIDField, projectIDLabel);
 
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.weightx = 0;
+        inputgbc.gridx = 0;
+        inputgbc.gridy = 2;
+        inputgbc.weightx = 0;
         JLabel datasetLabel = new JLabel("Domain:");
-        inputPanel.add(datasetLabel, gbc);
+        testConfigPanel.add(datasetLabel, inputgbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        gbc.weightx = 1.0;
+        inputgbc.gridx = 1;
+        inputgbc.gridy = 2;
+        inputgbc.weightx = 1.0;
         JComboBox<Dataset> datasetField = new JComboBox<>(Dataset.values());
         datasetField.setSelectedIndex(Dataset.indexOfName(settings.dataset()));
-        inputPanel.add(datasetField, gbc);
+        testConfigPanel.add(datasetField, inputgbc);
         setupUIChangeTracking(datasetField, datasetLabel);
 
 
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.weightx = 0;
+        inputgbc.gridx = 0;
+        inputgbc.gridy = 3;
+        inputgbc.weightx = 0;
         JLabel systemPromptLabel = new JLabel("System Prompt:");
-        inputPanel.add(systemPromptLabel, gbc);
+        testConfigPanel.add(systemPromptLabel, inputgbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 3;
-        gbc.weightx = 1.0;
+        inputgbc.gridx = 1;
+        inputgbc.gridy = 3;
+        inputgbc.weightx = 1.0;
         JTextArea systemPromptField = new JTextArea(settings.systemPrompt(), 5, 20);
-        inputPanel.add(systemPromptField, gbc);
+        testConfigPanel.add(systemPromptField, inputgbc);
         setupUIChangeTracking(systemPromptField, systemPromptLabel);
 
 
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.weightx = 0;
+        inputgbc.gridx = 0;
+        inputgbc.gridy = 4;
+        inputgbc.weightx = 0;
         JLabel customDatasetLabel = new JLabel("Custom Dataset:");
-        inputPanel.add(customDatasetLabel, gbc);
-        gbc.gridx = 1;
-        gbc.gridy = 4;
-        gbc.weightx = 1.0;
+        testConfigPanel.add(customDatasetLabel, inputgbc);
+        inputgbc.gridx = 1;
+        inputgbc.gridy = 4;
+        inputgbc.weightx = 1.0;
         var customDatasetPathLabel = new JLabel("No file selected");
         Optional.ofNullable(customDataset).map(Object::toString).ifPresent(customDatasetPathLabel::setText);
 
-        inputPanel.add(customDatasetPathLabel, gbc);
+        testConfigPanel.add(customDatasetPathLabel, inputgbc);
         customDatasetPathLabel.setBorder(BorderFactory.createCompoundBorder(
         BorderFactory.createLineBorder(Color.GRAY),
         BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        gbc.gridx = 1;
-        gbc.gridy = 5;
-        gbc.weightx = 1.0;
+        inputgbc.gridx = 1;
+        inputgbc.gridy = 5;
+        inputgbc.weightx = 1.0;
         var datasetButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
         var chooseButton = new JButton("Select File…");
@@ -128,9 +138,9 @@ public class MindgardSettingsUI extends JPanel {
 
         datasetButtons.add(chooseButton, constraints);
 
-        gbc.gridx = 1;
-        gbc.gridy = 5;
-        gbc.weightx = 1.0;
+        inputgbc.gridx = 1;
+        inputgbc.gridy = 5;
+        inputgbc.weightx = 1.0;
 
         var clearButton = new JButton("Remove Dataset");
 
@@ -141,122 +151,122 @@ public class MindgardSettingsUI extends JPanel {
         });
 
         datasetButtons.add(clearButton, constraints);
-        inputPanel.add(datasetButtons,gbc);
+        testConfigPanel.add(datasetButtons,inputgbc);
         setupUIChangeTracking(customDatasetPathLabel, customDatasetLabel);
 
-        gbc.gridx = 0;
-        gbc.gridy = 6;
-        gbc.weightx = 0;
+        inputgbc.gridx = 0;
+        inputgbc.gridy = 6;
+        inputgbc.weightx = 0;
         JLabel excludeAttacksLabel = new JLabel("Exclude attack(s):");
-        inputPanel.add(excludeAttacksLabel, gbc);
+        testConfigPanel.add(excludeAttacksLabel, inputgbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 6;
-        gbc.weightx = 1.0;
+        inputgbc.gridx = 1;
+        inputgbc.gridy = 6;
+        inputgbc.weightx = 1.0;
         JTextField excludeAttacksField = new JTextField(settings.exclude(), 20);
         excludeAttacksField.setToolTipText("e.g. AntiGPT,PersonGPT");
-        inputPanel.add(excludeAttacksField, gbc);
+        testConfigPanel.add(excludeAttacksField, inputgbc);
         setupUIChangeTracking(excludeAttacksField, excludeAttacksLabel);
 
-        gbc.gridx = 0;
-        gbc.gridy = 7;
-        gbc.weightx = 0;
+        inputgbc.gridx = 0;
+        inputgbc.gridy = 7;
+        inputgbc.weightx = 0;
         JLabel includeAttacksLabel = new JLabel("Include attack(s):");
-        inputPanel.add(includeAttacksLabel, gbc);
+        testConfigPanel.add(includeAttacksLabel, inputgbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 7;
-        gbc.weightx = 1.0;
+        inputgbc.gridx = 1;
+        inputgbc.gridy = 7;
+        inputgbc.weightx = 1.0;
         JTextField includeAttacksField = new JTextField(settings.include(), 20);
         includeAttacksField.setToolTipText("e.g. AntiGPT,PersonGPT");
-        inputPanel.add(includeAttacksField, gbc);
+        testConfigPanel.add(includeAttacksField, inputgbc);
         setupUIChangeTracking(includeAttacksField, includeAttacksLabel);
 
-        gbc.gridx = 0;
-        gbc.gridy = 8;
-        gbc.weightx = 0;
+        inputgbc.gridx = 0;
+        inputgbc.gridy = 8;
+        inputgbc.weightx = 0;
         JLabel promptRepeatsLabel = new JLabel("Prompt Repeats:");
-        inputPanel.add(promptRepeatsLabel, gbc);
+        testConfigPanel.add(promptRepeatsLabel, inputgbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 8;
-        gbc.weightx = 1.0;
+        inputgbc.gridx = 1;
+        inputgbc.gridy = 8;
+        inputgbc.weightx = 1.0;
         JFormattedTextField promptRepeatsField = new JFormattedTextField(NumberFormat.getIntegerInstance());
         promptRepeatsField.setValue(settings.promptRepeats());
         promptRepeatsField.setToolTipText("e.g. 3");
-        inputPanel.add(promptRepeatsField, gbc);
+        testConfigPanel.add(promptRepeatsField, inputgbc);
         setupUIChangeTracking(promptRepeatsField, promptRepeatsLabel);
 
-        gbc.gridx = 0;
-        gbc.gridy = 9;
-        gbc.weightx = 0;
+        inputgbc.gridx = 0;
+        inputgbc.gridy = 9;
+        inputgbc.weightx = 0;
         JLabel parallelismLabel = new JLabel("Parallelism:");
-        inputPanel.add(parallelismLabel, gbc);
+        testConfigPanel.add(parallelismLabel, inputgbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 9;
-        gbc.weightx = 1.0;
+        inputgbc.gridx = 1;
+        inputgbc.gridy = 9;
+        inputgbc.weightx = 1.0;
         JFormattedTextField parallelismField = new JFormattedTextField(NumberFormat.getIntegerInstance());
         parallelismField.setValue(settings.parallelism());
         parallelismField.setToolTipText("e.g. 1");
-        inputPanel.add(parallelismField, gbc);
+        testConfigPanel.add(parallelismField, inputgbc);
         setupUIChangeTracking(parallelismField, parallelismLabel);
 
-        gbc.gridx = 0;
-        gbc.gridy = 10;
-        gbc.gridwidth = 2;
-        gbc.weightx = 0;
+        inputgbc.gridx = 0;
+        inputgbc.gridy = 10;
+        inputgbc.gridwidth = 2;
+        inputgbc.weightx = 0;
         JLabel parallelismLabelDescription = new JLabel("(Parallelism controls the maximum number of attacks we will launch against your model at once. If your model is stateful or otherwise would be confused by overlapping attacks, leave this at the default of 1.)");
         parallelismLabelDescription.setForeground(Color.decode("#CC5500"));
-        inputPanel.add(parallelismLabelDescription, gbc);
+        testConfigPanel.add(parallelismLabelDescription, inputgbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 11;
-        gbc.weightx = 0;
+        logingbc.gridx = 0;
+        logingbc.fill = GridBagConstraints.HORIZONTAL;
+        logingbc.weightx = 0;
         JLabel urlFieldLabel = new JLabel("Mindgard URL:");
-        inputPanel.add(urlFieldLabel, gbc);
+        loginPanel.add(urlFieldLabel, logingbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 11;
-        gbc.weightx = 1.0;
+        logingbc.gridx = 1;
+        logingbc.gridy = 0;
+        logingbc.weightx = 1.0;
         JTextField urlField = new JTextField(settings.url(), 20);
         includeAttacksField.setToolTipText("e.g. https://<YOUR DOMAIN>.mindgard.ai");
-        inputPanel.add(urlField, gbc);
+        loginPanel.add(urlField, logingbc);
         setupUIChangeTracking(urlField, urlFieldLabel);
 
-        gbc.gridx = 0;
-        gbc.gridy = 12;
-        gbc.weightx = 0;
+        logingbc.gridx = 0;
+        logingbc.gridy = 1;
+        logingbc.weightx = 0;
         JLabel audienceFieldLabel = new JLabel("Audience:");
-        inputPanel.add(audienceFieldLabel, gbc);
+        loginPanel.add(audienceFieldLabel, logingbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 12;
-        gbc.weightx = 1.0;
+        logingbc.gridx = 1;
+        logingbc.gridy = 1;
+        logingbc.weightx = 1.0;
         JTextField audienceField = new JTextField(settings.audience(), 20);
         includeAttacksField.setToolTipText("e.g. https://<YOUR AUDIENCE>.com");
-        inputPanel.add(audienceField, gbc);
+        loginPanel.add(audienceField, logingbc);
         setupUIChangeTracking(audienceField, audienceFieldLabel);
 
-        gbc.gridx = 0;
-        gbc.gridy = 13;
-        gbc.weightx = 0;
+        logingbc.gridx = 0;
+        logingbc.gridy = 2;
+        logingbc.weightx = 0;
         JLabel clientIDFieldLabel = new JLabel("Client ID:");
-        inputPanel.add(clientIDFieldLabel, gbc);
+        loginPanel.add(clientIDFieldLabel, logingbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 13;
-        gbc.weightx = 1.0;
+        logingbc.gridx = 1;
+        logingbc.gridy = 2;
+        logingbc.weightx = 1.0;
         JTextField clientIDField = new JTextField(settings.clientID(), 20);
         includeAttacksField.setToolTipText("Mindgard Client ID");
-        inputPanel.add(clientIDField, gbc);
+        loginPanel.add(clientIDField, logingbc);
         setupUIChangeTracking(clientIDField, clientIDFieldLabel);
 
 
-        gbc.gridx = 3;
-        gbc.gridy = 5;
-        gbc.weightx = 1.0;
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        inputgbc.gridx = 0;
+        inputgbc.gridy = 11;
+        inputgbc.weightx = 1.0;
+        JPanel testConfigButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton saveButton = new JButton("Save");
         saveButton.addActionListener((actionEvent) -> {
             saveUIContentsToSettings(
@@ -272,22 +282,53 @@ public class MindgardSettingsUI extends JPanel {
                 urlField.getText(),
                 audienceField.getText(),
                 clientIDField.getText()
-           );
+            );
         });
+        logingbc.gridx = 0;
+        logingbc.gridy = 3;
+        logingbc.weightx = 0;
+        JPanel loginButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton loginButton = new JButton("Login");
+        loginButton.addActionListener((actionEvent) -> {
+            var auth = new MindgardAuthentication(settings);
+            var deviceCode = auth.get_device_code();
+            try {
+                Desktop desktop = Desktop.getDesktop();
+                String url = deviceCode.verification_uri_complete();
+                desktop.browse(new java.net.URI(url));
+                JOptionPane.showMessageDialog(this, "Confirm that you see " + deviceCode.user_code());
+                auth.validate_login(deviceCode);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Unable to open browser: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.INFORMATION_MESSAGE
+                        );
+            }
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Logged in successfully to " + settings.url()
+            );
+        });
+        loginButtonPanel.add(loginButton);
+        testConfigButtonPanel.add(saveButton);
+
+        loginPanel.add(loginButtonPanel, logingbc);
+        testConfigPanel.add(testConfigButtonPanel, inputgbc);
+
+        tabs.addTab("Login", loginPanel);
+        tabs.addTab("Test Configuration", testConfigPanel);
+        mainPanel.add(tabs, BorderLayout.NORTH);
         
-        buttonPanel.add(saveButton);
-        mainPanel.add(inputPanel, BorderLayout.NORTH);
-        mainPanel.add(buttonPanel, BorderLayout.SOUTH);
-
-        add(inputPanel, BorderLayout.NORTH);
-        add(buttonPanel, BorderLayout.SOUTH);
-
+        add(mainPanel, BorderLayout.NORTH);
+        
         setPreferredSize(new Dimension(300, 120));
     }
 
     /**
      * Wraps and saves the contents of the UI components.
-     * This method saves the current contents of each UI component in the extension to the mindgard settings file using the Mindgard Settings Manager.
+     * This method saves the current contents of each UI component in the extension to the mindgard settings file.
      * @param selector contents of the selector field
      * @param projectID contents of the projectID field
      * @param dataset chosen dataset domain
@@ -326,8 +367,8 @@ public class MindgardSettingsUI extends JPanel {
             promptRepeats,
             parallelism
         );
-        MindgardSettingsManager.setSettings(newSettings);
-        this.settings = MindgardSettingsManager.getSettings();
+        setSettings(newSettings);
+        getSettings();
         
 
         if (!settings.save(Constants.SETTINGS_FILE_NAME)) {
@@ -420,5 +461,17 @@ public class MindgardSettingsUI extends JPanel {
                 });
             }
         }
+
+    /**
+     * Saves new settings contents to the settings file.
+     * @param newSettings the new settings
+    */
+    public static void setSettings(MindgardSettings newSettings) {newSettings.save(Constants.SETTINGS_FILE_NAME);}
+   
+   /**
+    * Gets the settings from disk
+    * @return the populated MindgardSettings record
+    */
+    public static MindgardSettings getSettings() {return MindgardSettings.loadOrCreate(Constants.SETTINGS_FILE_NAME);}
 
 }

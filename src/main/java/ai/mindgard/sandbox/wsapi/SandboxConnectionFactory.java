@@ -143,10 +143,9 @@ public class SandboxConnectionFactory {
      * @param apiURL The base API URL
      * @return true if the project ID is valid, false otherwise
      */
-    public boolean validateProject(String projectID, String apiURL) {
+    public boolean validateProject(String projectID, String apiURL, MindgardSettings settings) {
         try {
-            Log dummyLog = l -> {}; // Using dummy log for simplicity since MindgardAuthentication.auth() doesn't use logging
-            var auth = new MindgardAuthentication(dummyLog);
+            var auth = new MindgardAuthentication(settings);
 
             var request = HttpRequest.newBuilder()
                     .uri(URI.create(apiURL + "/api/v1/projects/validate/" + projectID))

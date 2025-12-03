@@ -16,7 +16,6 @@ import java.util.function.Function;
 
 import static ai.mindgard.JSON.fromJson;
 import static ai.mindgard.JSON.json;
-import static ai.mindgard.MindgardAuthentication.*;
 
 public class DeviceCodeFlow {
     private final HttpClient http;
