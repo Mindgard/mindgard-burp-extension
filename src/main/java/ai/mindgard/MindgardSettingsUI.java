@@ -8,83 +8,22 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.io.File;
 import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.*;
 import java.util.List;
+
 
 public class MindgardSettingsUI extends JPanel {
     private final JFileChooser customDatasetField = new JFileChooser();
     private File customDataset;
-    private MindgardSettings settings = MindgardSettingsManager.getSettings();
-
-
+    private MindgardSettings settings;
     Map<Component, Object> originalValues = new HashMap<>();
     List<JLabel> changedLabels = new ArrayList<>();
 
-    private void setupField(JComponent field, JLabel label) {
-        if (field instanceof JTextField textField) {
-            originalValues.put(textField, textField.getText());
-            textField.getDocument().addDocumentListener(new DocumentListener() {
-                @Override
-                public void insertUpdate(DocumentEvent e) { checkChanged(); }
-                public void removeUpdate(DocumentEvent e) { checkChanged(); }
-                public void changedUpdate(DocumentEvent e) { checkChanged(); }
-                private void checkChanged() {
-                    String original = (String) originalValues.get(textField);
-                    if (!textField.getText().equals(original)) {
-                        label.setForeground(Color.decode("#CC5500"));
-                        changedLabels.add(label);
-                    } else {
-                        label.setForeground(Color.BLACK);
-                    }
-                }
-            });
-        } else if (field instanceof JComboBox comboBox) {
-            originalValues.put(comboBox, comboBox.getSelectedItem());
-            comboBox.addActionListener(e -> {
-                Object original = originalValues.get(comboBox);
-                if (!Objects.equals(comboBox.getSelectedItem(), original)) {
-                    label.setForeground(Color.decode("#CC5500"));
-                    changedLabels.add(label);
-                } else {
-                    label.setForeground(Color.BLACK);
-                }
-            });
-        } else if (field instanceof JTextArea textArea) {
-            originalValues.put(textArea, textArea.getText());
-            textArea.getDocument().addDocumentListener(new DocumentListener() {
-                @Override
-                public void insertUpdate(DocumentEvent e) { checkChanged(); }
-                public void removeUpdate(DocumentEvent e) { checkChanged(); }
-                public void changedUpdate(DocumentEvent e) { checkChanged(); }
-                private void checkChanged() {
-                    String original = (String) originalValues.get(textArea);
-                    if (!textArea.getText().equals(original)) {
-                        label.setForeground(Color.decode("#CC5500"));
-                        changedLabels.add(label);
-                    } else {
-                        label.setForeground(Color.BLACK);
-                    }
-                }
-            });
-        } else if (field instanceof JLabel labelField) {
-            originalValues.put(labelField, labelField.getText());
-            labelField.addPropertyChangeListener("text", e -> {
-                String original = (String) originalValues.get(labelField);
-                if (!labelField.getText().equals(original)) {
-                    label.setForeground(Color.decode("#CC5500"));
-                    changedLabels.add(label);
-                } else {
-                    label.setForeground(Color.BLACK);
-                }
-            });
-        }
-    }
-
     public MindgardSettingsUI() {
+        
         super(new SpringLayout());
-        this.settings = MindgardSettingsManager.getSettings();
 
+        this.settings = MindgardSettingsManager.getSettings();
 
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -107,7 +46,7 @@ public class MindgardSettingsUI extends JPanel {
         gbc.weightx = 1.0;
         JTextField selectorField = new JTextField(settings.selector(), 20);
         inputPanel.add(selectorField, gbc);
-        setupField(selectorField, selectorLabel);
+        setupUIChangeTracking(selectorField, selectorLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 1;
@@ -119,7 +58,7 @@ public class MindgardSettingsUI extends JPanel {
         gbc.weightx = 1.0;
         JTextField projectIDField = new JTextField(settings.projectID(), 20);
         inputPanel.add(projectIDField, gbc);
-        setupField(projectIDField, projectIDLabel);
+        setupUIChangeTracking(projectIDField, projectIDLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 2;
@@ -133,7 +72,7 @@ public class MindgardSettingsUI extends JPanel {
         JComboBox<Dataset> datasetField = new JComboBox<>(Dataset.values());
         datasetField.setSelectedIndex(Dataset.indexOfName(settings.dataset()));
         inputPanel.add(datasetField, gbc);
-        setupField(datasetField, datasetLabel);
+        setupUIChangeTracking(datasetField, datasetLabel);
 
 
         gbc.gridx = 0;
@@ -147,7 +86,7 @@ public class MindgardSettingsUI extends JPanel {
         gbc.weightx = 1.0;
         JTextArea systemPromptField = new JTextArea(settings.systemPrompt(), 5, 20);
         inputPanel.add(systemPromptField, gbc);
-        setupField(systemPromptField, systemPromptLabel);
+        setupUIChangeTracking(systemPromptField, systemPromptLabel);
 
 
         gbc.gridx = 0;
@@ -203,7 +142,7 @@ public class MindgardSettingsUI extends JPanel {
 
         datasetButtons.add(clearButton, constraints);
         inputPanel.add(datasetButtons,gbc);
-        setupField(customDatasetPathLabel, customDatasetLabel);
+        setupUIChangeTracking(customDatasetPathLabel, customDatasetLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 6;
@@ -217,7 +156,7 @@ public class MindgardSettingsUI extends JPanel {
         JTextField excludeAttacksField = new JTextField(settings.exclude(), 20);
         excludeAttacksField.setToolTipText("e.g. AntiGPT,PersonGPT");
         inputPanel.add(excludeAttacksField, gbc);
-        setupField(excludeAttacksField, excludeAttacksLabel);
+        setupUIChangeTracking(excludeAttacksField, excludeAttacksLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 7;
@@ -231,7 +170,7 @@ public class MindgardSettingsUI extends JPanel {
         JTextField includeAttacksField = new JTextField(settings.include(), 20);
         includeAttacksField.setToolTipText("e.g. AntiGPT,PersonGPT");
         inputPanel.add(includeAttacksField, gbc);
-        setupField(includeAttacksField, includeAttacksLabel);
+        setupUIChangeTracking(includeAttacksField, includeAttacksLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 8;
@@ -246,7 +185,7 @@ public class MindgardSettingsUI extends JPanel {
         promptRepeatsField.setValue(settings.promptRepeats());
         promptRepeatsField.setToolTipText("e.g. 3");
         inputPanel.add(promptRepeatsField, gbc);
-        setupField(promptRepeatsField, promptRepeatsLabel);
+        setupUIChangeTracking(promptRepeatsField, promptRepeatsLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 9;
@@ -261,7 +200,7 @@ public class MindgardSettingsUI extends JPanel {
         parallelismField.setValue(settings.parallelism());
         parallelismField.setToolTipText("e.g. 1");
         inputPanel.add(parallelismField, gbc);
-        setupField(parallelismField, parallelismLabel);
+        setupUIChangeTracking(parallelismField, parallelismLabel);
 
         gbc.gridx = 0;
         gbc.gridy = 10;
@@ -277,49 +216,20 @@ public class MindgardSettingsUI extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton saveButton = new JButton("Save");
         saveButton.addActionListener((actionEvent) -> {
-            try {
-                Integer promptRepeats = ((Number)promptRepeatsField.getFormatter().stringToValue(promptRepeatsField.getText())).intValue();
-                Integer parallelism = ((Number)parallelismField.getFormatter().stringToValue(parallelismField.getText())).intValue();
-                MindgardSettings newSettings = new MindgardSettings(
-                    selectorField.getText(),
-                    projectIDField.getText(),
-                    ((Dataset)datasetField.getSelectedItem()).getDatasetName(), 
-                    systemPromptField.getText(),
-                    Optional.ofNullable(customDataset).map(File::getAbsolutePath).orElse(null),
-                    excludeAttacksField.getText(),
-                    includeAttacksField.getText(),
-                    promptRepeats,
-                    parallelism
-                );
-                MindgardSettingsManager.updateSettings(newSettings);
-                this.settings = MindgardSettingsManager.getSettings();
-            } catch (ParseException e) {
-                JOptionPane.showMessageDialog(
-                    this,
-                    "Could not save settings" + "\n" + e.getMessage(),
-                    "Mindgard Extension",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-            }
-
-            if (!settings.save(Constants.SETTINGS_FILE_NAME)) {
-                return;
-            }
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Mindgard settings updated successfully!" + "\n" +
-                            "Tests run using this configuration can be found at " + Constants.FRONTEND_URL + "/results?project_id=" + projectIDField.getText(),
-                    "Mindgard Extension",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
-            changedLabels.forEach(label -> {
-                label.setForeground(Color.BLACK);
-            });
+            saveUIContentsToSettings(
+                selectorField.getText(),
+                projectIDField.getText(),
+                ((Dataset)datasetField.getSelectedItem()).getDatasetName(), 
+                systemPromptField.getText(),
+                Optional.ofNullable(customDataset).map(File::getAbsolutePath).orElse(null),
+                excludeAttacksField.getText(),
+                includeAttacksField.getText(),
+                Integer.parseInt(promptRepeatsField.getText()),
+                Integer.parseInt(parallelismField.getText())
+           );
         });
+        
         buttonPanel.add(saveButton);
-
         mainPanel.add(inputPanel, BorderLayout.NORTH);
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -328,4 +238,125 @@ public class MindgardSettingsUI extends JPanel {
 
         setPreferredSize(new Dimension(300, 120));
     }
+
+    /**
+     * Wraps and saves the contents of the UI components.
+     * This method saves the current contents of each UI component in the extension to the mindgard settings file using the Mindgard Settings Manager.
+     * @param selector contents of the selector field
+     * @param projectID contents of the projectID field
+     * @param dataset chosen dataset domain
+     * @param systemPrompt contents of the system prompt field
+     * @param customDatasetPath the path to the custom dataset on disk
+     * @param exclude the attacks to exclude from the test
+     * @param incude the attacks to include in the test
+     * @param promptRepeats the number of times prompts are repeated in each attack
+     * @param parallelism the maximum amount of concurrent requests on the target 
+     */
+    private void saveUIContentsToSettings(String selector, String projectID, String dataset, String systemPrompt, String customDatasetPath, String exclude, String incude, Integer promptRepeats, Integer parallelism ) {
+        MindgardSettings newSettings = new MindgardSettings(
+            selector,
+            projectID,
+            dataset, 
+            systemPrompt,
+            customDatasetPath,
+            exclude,
+            incude,
+            promptRepeats,
+            parallelism
+        );
+        MindgardSettingsManager.setSettings(newSettings);
+        this.settings = MindgardSettingsManager.getSettings();
+        
+
+        if (!settings.save(Constants.SETTINGS_FILE_NAME)) {
+            return;
+        }
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Mindgard settings updated successfully!" + "\n" +
+                        "Tests run using this configuration can be found at " + Constants.FRONTEND_URL + "/results?project_id=" + projectID,
+                "Mindgard Extension",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+
+        changedLabels.forEach(label -> {
+            label.setForeground(Color.BLACK);
+        });
+    }
+
+    /**
+     * Sets up change tracking for a given UI field and its associated label.
+     * 
+     * This method attaches listeners to the provided field (which can be a {@link JTextField},
+     * {@link JComboBox}, {@link JTextArea}, or {@link JLabel}) to monitor for changes in its value.
+     * When a change is detected compared to the original value, the label's foreground color is updated
+     * to indicate that the field has been modified. If the field is reverted to its original value,
+     * the label color is reset.
+     * 
+     *
+     * @param field the UI component to monitor for changes (must be a {@link JTextField}, {@link JComboBox},
+     *              {@link JTextArea}, or {@link JLabel})
+     * @param label the label associated with the field, whose color will be updated to reflect changes
+     */
+    private void setupUIChangeTracking(JComponent field, JLabel label) {
+            if (field instanceof JTextField textField) {
+                originalValues.put(textField, textField.getText());
+                textField.getDocument().addDocumentListener(new DocumentListener() {
+                    @Override
+                    public void insertUpdate(DocumentEvent e) { checkChanged(); }
+                    public void removeUpdate(DocumentEvent e) { checkChanged(); }
+                    public void changedUpdate(DocumentEvent e) { checkChanged(); }
+                    private void checkChanged() {
+                        String original = (String) originalValues.get(textField);
+                        if (!textField.getText().equals(original)) {
+                            label.setForeground(Color.decode("#CC5500"));
+                            changedLabels.add(label);
+                        } else {
+                            label.setForeground(Color.BLACK);
+                        }
+                    }
+                });
+            } else if (field instanceof JComboBox comboBox) {
+                originalValues.put(comboBox, comboBox.getSelectedItem());
+                comboBox.addActionListener(e -> {
+                    Object original = originalValues.get(comboBox);
+                    if (!Objects.equals(comboBox.getSelectedItem(), original)) {
+                        label.setForeground(Color.decode("#CC5500"));
+                        changedLabels.add(label);
+                    } else {
+                        label.setForeground(Color.BLACK);
+                    }
+                });
+            } else if (field instanceof JTextArea textArea) {
+                originalValues.put(textArea, textArea.getText());
+                textArea.getDocument().addDocumentListener(new DocumentListener() {
+                    @Override
+                    public void insertUpdate(DocumentEvent e) { checkChanged(); }
+                    public void removeUpdate(DocumentEvent e) { checkChanged(); }
+                    public void changedUpdate(DocumentEvent e) { checkChanged(); }
+                    private void checkChanged() {
+                        String original = (String) originalValues.get(textArea);
+                        if (!textArea.getText().equals(original)) {
+                            label.setForeground(Color.decode("#CC5500"));
+                            changedLabels.add(label);
+                        } else {
+                            label.setForeground(Color.BLACK);
+                        }
+                    }
+                });
+            } else if (field instanceof JLabel labelField) {
+                originalValues.put(labelField, labelField.getText());
+                labelField.addPropertyChangeListener("text", e -> {
+                    String original = (String) originalValues.get(labelField);
+                    if (!labelField.getText().equals(original)) {
+                        label.setForeground(Color.decode("#CC5500"));
+                        changedLabels.add(label);
+                    } else {
+                        label.setForeground(Color.BLACK);
+                    }
+                });
+            }
+        }
+
 }
