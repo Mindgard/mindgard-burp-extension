@@ -210,6 +210,49 @@ public class MindgardSettingsUI extends JPanel {
         parallelismLabelDescription.setForeground(Color.decode("#CC5500"));
         inputPanel.add(parallelismLabelDescription, gbc);
 
+        gbc.gridx = 0;
+        gbc.gridy = 11;
+        gbc.weightx = 0;
+        JLabel urlFieldLabel = new JLabel("Mindgard URL:");
+        inputPanel.add(urlFieldLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 11;
+        gbc.weightx = 1.0;
+        JTextField urlField = new JTextField(settings.url(), 20);
+        includeAttacksField.setToolTipText("e.g. https://<YOUR DOMAIN>.mindgard.ai");
+        inputPanel.add(urlField, gbc);
+        setupUIChangeTracking(urlField, urlFieldLabel);
+
+        gbc.gridx = 0;
+        gbc.gridy = 12;
+        gbc.weightx = 0;
+        JLabel audienceFieldLabel = new JLabel("Audience:");
+        inputPanel.add(audienceFieldLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 12;
+        gbc.weightx = 1.0;
+        JTextField audienceField = new JTextField(settings.audience(), 20);
+        includeAttacksField.setToolTipText("e.g. https://<YOUR AUDIENCE>.com");
+        inputPanel.add(audienceField, gbc);
+        setupUIChangeTracking(audienceField, audienceFieldLabel);
+
+        gbc.gridx = 0;
+        gbc.gridy = 13;
+        gbc.weightx = 0;
+        JLabel clientIDFieldLabel = new JLabel("Client ID:");
+        inputPanel.add(clientIDFieldLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 13;
+        gbc.weightx = 1.0;
+        JTextField clientIDField = new JTextField(settings.clientID(), 20);
+        includeAttacksField.setToolTipText("Mindgard Client ID");
+        inputPanel.add(clientIDField, gbc);
+        setupUIChangeTracking(clientIDField, clientIDFieldLabel);
+
+
         gbc.gridx = 3;
         gbc.gridy = 5;
         gbc.weightx = 1.0;
@@ -225,7 +268,10 @@ public class MindgardSettingsUI extends JPanel {
                 excludeAttacksField.getText(),
                 includeAttacksField.getText(),
                 Integer.parseInt(promptRepeatsField.getText()),
-                Integer.parseInt(parallelismField.getText())
+                Integer.parseInt(parallelismField.getText()),
+                urlField.getText(),
+                audienceField.getText(),
+                clientIDField.getText()
            );
         });
         
@@ -252,8 +298,24 @@ public class MindgardSettingsUI extends JPanel {
      * @param promptRepeats the number of times prompts are repeated in each attack
      * @param parallelism the maximum amount of concurrent requests on the target 
      */
-    private void saveUIContentsToSettings(String selector, String projectID, String dataset, String systemPrompt, String customDatasetPath, String exclude, String incude, Integer promptRepeats, Integer parallelism ) {
+    private void saveUIContentsToSettings(
+        String selector,
+        String projectID,
+        String dataset,
+        String systemPrompt,
+        String customDatasetPath,
+        String exclude,
+        String incude,
+        Integer promptRepeats,
+        Integer parallelism,
+        String urlString,
+        String audienceString,
+        String clientIDString
+     ) {
         MindgardSettings newSettings = new MindgardSettings(
+            urlString,
+            audienceString,
+            clientIDString,
             selector,
             projectID,
             dataset, 
@@ -275,7 +337,7 @@ public class MindgardSettingsUI extends JPanel {
         JOptionPane.showMessageDialog(
                 this,
                 "Mindgard settings updated successfully!" + "\n" +
-                        "Tests run using this configuration can be found at " + Constants.FRONTEND_URL + "/results?project_id=" + projectID,
+                        "Tests run using this configuration can be found at " + urlString + "/results?project_id=" + projectID,
                 "Mindgard Extension",
                 JOptionPane.INFORMATION_MESSAGE
         );

@@ -2,6 +2,9 @@ package ai.mindgard.sandbox.wsapi.messages;
 
 import java.util.List;
 
+/**
+ * CLI Initialization Response Record
+ */
 public record CliInitResponse(String groupId, String url, List<Error> errors) {
     public record Error(String message) {}
     public CliInitResponse(String groupId, String url) {

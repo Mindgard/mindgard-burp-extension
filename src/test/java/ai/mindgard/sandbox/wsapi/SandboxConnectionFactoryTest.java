@@ -42,7 +42,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new MindgardSettings("selector","projectID","dataset", "systemPrompt", null, null, null, null, 1);
+        var settings = new MindgardSettings("http://example.com/ws", "", "", "selector","projectID","dataset", "systemPrompt", null, null, null, null, 1);
         var expectedRequest = new OrchestratorSetupRequest(
             settings.projectID(),
             1,
@@ -67,13 +67,13 @@ class SandboxConnectionFactoryTest {
 
         var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
 
-        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", settings.url());
         when(response.body()).thenReturn(JSON.json(cliInitResponse));
         when(
             http
                 .newWebSocketBuilder()
                 .subprotocols("json.webpubsub.azure.v1")
-                .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+                .buildAsync(eq(URI.create(settings.url())), any(MindgardWebsocketClient.class))
         ).thenReturn(CompletableFuture.completedFuture(websocket));
 
         var connection = cf.connect(mindgard, auth, settings, l -> {});
@@ -90,7 +90,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new MindgardSettings("selector","projectID","dataset", "systemPrompt", null, null, null, null, 1);
+        var settings = new MindgardSettings("http://example.com/ws", "", "", "selector","projectID","dataset", "systemPrompt", null, null, null, null, 1);
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.projectID(),
                 1,
@@ -121,7 +121,7 @@ class SandboxConnectionFactoryTest {
                 http
                         .newWebSocketBuilder()
                         .subprotocols("json.webpubsub.azure.v1")
-                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+                        .buildAsync(eq(URI.create(settings.url())), any(MindgardWebsocketClient.class))
         ).thenReturn(CompletableFuture.completedFuture(websocket));
 
         try {
@@ -149,7 +149,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new MindgardSettings("selector","projectID","dataset", "systemPrompt", customDatasetPath.toAbsolutePath().toString(), null, null, null, 1);
+        var settings = new MindgardSettings("http://example.com/ws", "", "", "selector","projectID","dataset", "systemPrompt", customDatasetPath.toAbsolutePath().toString(), null, null, null, 1);
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.projectID(),
                 1,
@@ -174,13 +174,13 @@ class SandboxConnectionFactoryTest {
 
         var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
 
-        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", settings.url());
         when(response.body()).thenReturn(JSON.json(cliInitResponse));
         when(
                 http
                         .newWebSocketBuilder()
                         .subprotocols("json.webpubsub.azure.v1")
-                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+                        .buildAsync(eq(URI.create(settings.url())), any(MindgardWebsocketClient.class))
         ).thenReturn(CompletableFuture.completedFuture(websocket));
 
         var connection = cf.connect(mindgard, auth, settings, l -> {});
@@ -199,7 +199,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new MindgardSettings("selector","projectID","dataset", "systemPrompt", null, excludedAttack, null, null, 1);
+        var settings = new MindgardSettings("http://example.com/ws", "", "", "selector","projectID","dataset", "systemPrompt", null, excludedAttack, null, null, 1);
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.projectID(),
                 1,
@@ -225,13 +225,13 @@ class SandboxConnectionFactoryTest {
 
         var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
 
-        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", settings.url());
         when(response.body()).thenReturn(JSON.json(cliInitResponse));
         when(
                 http
                         .newWebSocketBuilder()
                         .subprotocols("json.webpubsub.azure.v1")
-                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+                        .buildAsync(eq(URI.create(settings.url())), any(MindgardWebsocketClient.class))
         ).thenReturn(CompletableFuture.completedFuture(websocket));
 
         var connection = cf.connect(mindgard, auth, settings, l -> {});
@@ -250,7 +250,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new MindgardSettings("selector","projectID","dataset", "systemPrompt", null, excludedAttack, null, null, 1);
+        var settings = new MindgardSettings("http://example.com/ws", "", "", "selector","projectID","dataset", "systemPrompt", null, excludedAttack, null, null, 1);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.projectID(),
@@ -277,13 +277,13 @@ class SandboxConnectionFactoryTest {
 
         var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
 
-        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", settings.url());
         when(response.body()).thenReturn(JSON.json(cliInitResponse));
         when(
                 http
                         .newWebSocketBuilder()
                         .subprotocols("json.webpubsub.azure.v1")
-                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+                        .buildAsync(eq(URI.create(settings.url())), any(MindgardWebsocketClient.class))
         ).thenReturn(CompletableFuture.completedFuture(websocket));
 
         var connection = cf.connect(mindgard, auth, settings, l -> {});
@@ -303,7 +303,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new MindgardSettings("selector","projectID","dataset", "systemPrompt", null, null, includedAttack, null, 1);
+        var settings = new MindgardSettings("http://example.com/ws", "", "", "selector","projectID","dataset", "systemPrompt", null, null, includedAttack, null, 1);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.projectID(),
@@ -330,13 +330,13 @@ class SandboxConnectionFactoryTest {
 
         var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
 
-        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", settings.url());
         when(response.body()).thenReturn(JSON.json(cliInitResponse));
         when(
                 http
                         .newWebSocketBuilder()
                         .subprotocols("json.webpubsub.azure.v1")
-                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+                        .buildAsync(eq(URI.create(settings.url())), any(MindgardWebsocketClient.class))
         ).thenReturn(CompletableFuture.completedFuture(websocket));
 
         var connection = cf.connect(mindgard, auth, settings, l -> {});
@@ -356,7 +356,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new MindgardSettings("selector","projectID","dataset", "systemPrompt", null, excludedAttack, includedAttack, null, 1);
+        var settings = new MindgardSettings("http://example.com/ws", "", "", "selector","projectID","dataset", "systemPrompt", null, excludedAttack, includedAttack, null, 1);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.projectID(),
@@ -384,13 +384,13 @@ class SandboxConnectionFactoryTest {
 
         var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
 
-        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", settings.url());
         when(response.body()).thenReturn(JSON.json(cliInitResponse));
         when(
                 http
                         .newWebSocketBuilder()
                         .subprotocols("json.webpubsub.azure.v1")
-                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+                        .buildAsync(eq(URI.create(settings.url())), any(MindgardWebsocketClient.class))
         ).thenReturn(CompletableFuture.completedFuture(websocket));
 
         var connection = cf.connect(mindgard, auth, settings, l -> {});
@@ -409,7 +409,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new MindgardSettings("selector","projectID","dataset", "systemPrompt", null, excludedAttack, null, null, 1);
+        var settings = new MindgardSettings("http://example.com/ws", "", "", "selector","projectID","dataset", "systemPrompt", null, excludedAttack, null, null, 1);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.projectID(),
@@ -436,13 +436,13 @@ class SandboxConnectionFactoryTest {
 
         var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
 
-        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", settings.url());
         when(response.body()).thenReturn(JSON.json(cliInitResponse));
         when(
                 http
                         .newWebSocketBuilder()
                         .subprotocols("json.webpubsub.azure.v1")
-                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+                        .buildAsync(eq(URI.create(settings.url())), any(MindgardWebsocketClient.class))
         ).thenReturn(CompletableFuture.completedFuture(websocket));
 
         var connection = cf.connect(mindgard, auth, settings, l -> {});
@@ -460,7 +460,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new MindgardSettings("selector","projectID","dataset", "systemPrompt", null, null, null, null, 1);
+        var settings = new MindgardSettings("http://example.com/ws", "", "", "selector","projectID","dataset", "systemPrompt", null, null, null, null, 1);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.projectID(),
@@ -487,13 +487,13 @@ class SandboxConnectionFactoryTest {
 
         var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
 
-        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", settings.url());
         when(response.body()).thenReturn(JSON.json(cliInitResponse));
         when(
                 http
                         .newWebSocketBuilder()
                         .subprotocols("json.webpubsub.azure.v1")
-                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+                        .buildAsync(eq(URI.create(settings.url())), any(MindgardWebsocketClient.class))
         ).thenReturn(CompletableFuture.completedFuture(websocket));
 
         var connection = cf.connect(mindgard, auth, settings, l -> {});
@@ -511,7 +511,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new MindgardSettings("selector","projectID","dataset", "systemPrompt", null, null, null, 3, 1);
+        var settings = new MindgardSettings("http://example.com/ws", "", "", "selector","projectID","dataset", "systemPrompt", null, null, null, 3, 1);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.projectID(),
@@ -538,13 +538,13 @@ class SandboxConnectionFactoryTest {
 
         var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
 
-        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", settings.url());
         when(response.body()).thenReturn(JSON.json(cliInitResponse));
         when(
                 http
                         .newWebSocketBuilder()
                         .subprotocols("json.webpubsub.azure.v1")
-                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+                        .buildAsync(eq(URI.create(settings.url())), any(MindgardWebsocketClient.class))
         ).thenReturn(CompletableFuture.completedFuture(websocket));
 
         var connection = cf.connect(mindgard, auth, settings, l -> {});
@@ -561,7 +561,7 @@ class SandboxConnectionFactoryTest {
         var auth = mock(MindgardAuthentication.class);
         var client = mock(MindgardWebsocketClient.class);
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("mock");
-        var settings = new MindgardSettings("selector","projectID","dataset", "systemPrompt", null, null, null, 3, 4);
+        var settings = new MindgardSettings("http://example.com/ws", "", "", "selector","projectID","dataset", "systemPrompt", null, null, null, 3, 4);
 
         var expectedRequest = new OrchestratorSetupRequest(
                 settings.projectID(),
@@ -588,13 +588,13 @@ class SandboxConnectionFactoryTest {
 
         var cf = new SandboxConnectionFactory(http, matchHttpBody, (a,b,c) -> client);
 
-        CliInitResponse cliInitResponse = new CliInitResponse("groupId", "http://example.com/ws");
+        CliInitResponse cliInitResponse = new CliInitResponse("groupId", settings.url());
         when(response.body()).thenReturn(JSON.json(cliInitResponse));
         when(
                 http
                         .newWebSocketBuilder()
                         .subprotocols("json.webpubsub.azure.v1")
-                        .buildAsync(eq(URI.create("http://example.com/ws")), any(MindgardWebsocketClient.class))
+                        .buildAsync(eq(URI.create(settings.url())), any(MindgardWebsocketClient.class))
         ).thenReturn(CompletableFuture.completedFuture(websocket));
 
         var connection = cf.connect(mindgard, auth, settings, l -> {});
