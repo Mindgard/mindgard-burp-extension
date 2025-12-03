@@ -31,6 +31,7 @@ public record MindgardSettings(
 
     /**
      * loadOrCreate
+     * Loads the settings from file, or creates a new settings record with default values if the file doesn't exist.
      * @param filename the name of the settings file - typically "burp.json"
      * @return a settings record containing the contents of the settings file, or defaults if it doesn't exist
      */
@@ -41,7 +42,8 @@ public record MindgardSettings(
             try {
                 fileContents = Files.readString(settingsFile.toPath());
                 JSONObject json = new JSONObject(fileContents);
-    
+                
+                //Populates with a default value if key doesn't exist.
                 String selector = json.optString("selector", "");
                 String projectID = json.optString("projectID", "");
                 String dataset = json.optString("dataset", "");
@@ -77,9 +79,9 @@ public record MindgardSettings(
 
 
     /**
-     * 
+     * Saves the settings to file.
      * @param settingsFileName the filename of the settings file, typically "burp.json" but this is a constant
-     * @return true is file write was succcessful, but this can be void.
+     * @return true is file write was succcessful.
      */
     public boolean save(String settingsFileName) {
         // Validate project ID before saving
