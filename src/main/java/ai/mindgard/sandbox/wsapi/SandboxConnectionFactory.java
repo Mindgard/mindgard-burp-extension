@@ -24,18 +24,23 @@ import static ai.mindgard.JSON.fromJson;
 import static ai.mindgard.JSON.json;
 
 /**
- * Factory class responsible for creating and managing connections to the Mindgard Sandbox WebSocket API.
+ * Factory class responsible for creating and managing connections to the
+ * Mindgard Sandbox WebSocket API.
  * <p>
- * This class provides methods to initialize and validate connections, as well as to handle authentication and
- * configuration for the Mindgard sandbox environment. It supports both default and parameterized construction,
- * allowing for flexible dependency injection of HTTP clients, body publishers, and WebSocket client factories.
+ * This class provides methods to initialize and validate connections, as well
+ * as to handle authentication and
+ * configuration for the Mindgard sandbox environment. It supports both default
+ * and parameterized construction,
+ * allowing for flexible dependency injection of HTTP clients, body publishers,
+ * and WebSocket client factories.
  * </p>
  *
  * <p>
  * Usage example:
+ * 
  * <pre>
- *     SandboxConnectionFactory factory = new SandboxConnectionFactory();
- *     SandboxConnection connection = factory.connect(mindgard, auth, settings, logger);
+ * SandboxConnectionFactory factory = new SandboxConnectionFactory();
+ * SandboxConnection connection = factory.connect(mindgard, auth, settings, logger);
  * </pre>
  * </p>
  *
@@ -55,11 +60,13 @@ public class SandboxConnectionFactory {
 
     /**
      * Parameterized Constructor
-     * @param http HTTP Client
+     * 
+     * @param http                 HTTP Client
      * @param bodyPublisherFactory Function to create Body Publishers
-     * @param clientFactory Factory for Mindgard WebSocket Clients
+     * @param clientFactory        Factory for Mindgard WebSocket Clients
      */
-    public SandboxConnectionFactory(HttpClient http, Function<String, HttpRequest.BodyPublisher> bodyPublisherFactory, MindgardWebsocketClient.Factory clientFactory) {
+    public SandboxConnectionFactory(HttpClient http, Function<String, HttpRequest.BodyPublisher> bodyPublisherFactory,
+            MindgardWebsocketClient.Factory clientFactory) {
         this.http = http;
         this.bodyPublisherFactory = bodyPublisherFactory;
         this.clientFactory = clientFactory;
@@ -67,22 +74,24 @@ public class SandboxConnectionFactory {
 
     /**
      * Constructor with only HttpClient
+     * 
      * @param http HTTP Client
      */
     public SandboxConnectionFactory(HttpClient http) {
         this(http, HttpRequest.BodyPublishers::ofString, MindgardWebsocketClient::new);
     }
 
-
     /**
      * Establishes a connection to the Mindgard Sandbox WebSocket API.
+     * 
      * @param mindgard The Mindgard Extension instance
-     * @param auth Authentication handler
+     * @param auth     Authentication handler
      * @param settings Mindgard settings
-     * @param logger Logger instance
+     * @param logger   Logger instance
      * @return Established SandboxConnection
      */
-    public SandboxConnection connect(Mindgard mindgard, MindgardAuthentication auth, MindgardSettings settings, Log logger) {
+    public SandboxConnection connect(Mindgard mindgard, MindgardAuthentication auth, MindgardSettings settings,
+            Log logger) {
         CliInitResponse cliInitResponse = cliInit(settings.projectID(), auth.auth(), settings, logger);
         if (cliInitResponse.errors() != null) {
             throw new ConnectionFailedException(cliInitResponse.errors());
@@ -98,10 +107,11 @@ public class SandboxConnectionFactory {
 
     /**
      * Initializes the CLI connection with the Mindgard Orchestratration Service.
-     * @param projectID the project ID
+     * 
+     * @param projectID   the project ID
      * @param accessToken the access token
-     * @param settings Mindgard settings
-     * @param logger Logger instance
+     * @param settings    Mindgard settings
+     * @param logger      Logger instance
      * @return CLI Initialization Response
      */
     private CliInitResponse cliInit(String projectID, String accessToken, MindgardSettings settings, Log logger) {
@@ -118,8 +128,7 @@ public class SandboxConnectionFactory {
                     null,
                     commaSeperatedToList(settings.exclude()),
                     commaSeperatedToList(settings.include()),
-                    settings.promptRepeats()
-            );
+                    settings.promptRepeats());
 
             var cliInit = HttpRequest.newBuilder()
                     .uri(URI.create(settings.addSubdomainToURI(settings.url(), "api") + "/api/v1/tests/cli_init"))
@@ -139,37 +148,39 @@ public class SandboxConnectionFactory {
 
     /**
      * Validates the provided project ID against the Mindgard API.
+     * 
      * @param projectID The project ID to validate
-     * @param apiURL The base API URL
+     * @param apiURL    The base API URL
      * @return true if the project ID is valid, false otherwise
      */
-    public boolean validateProject(String projectID, String apiURL, MindgardSettingsManager mgsm) {
-        try {
-            var auth = new MindgardAuthentication(mgsm);
+    public void validateProject(String projectID, String apiURL, MindgardSettingsManager mgsm) throws Exception {
+        var auth = new MindgardAuthentication(mgsm);
 
-            var request = HttpRequest.newBuilder()
-                    .uri(URI.create(apiURL + "/api/v1/projects/validate/" + projectID))
-                    .header("Accept", "application/json")
-                    .header("Authorization", "Bearer " + auth.auth())
-                    .GET()
-                    .build();
+        var request = HttpRequest.newBuilder()
+                .uri(URI.create(apiURL + "/api/v1/projects/validate/" + projectID))
+                .header("Accept", "application/json")
+                .header("Authorization", "Bearer " + auth.auth())
+                .GET()
+                .build();
 
-            var response = http.send(request, HttpResponse.BodyHandlers.ofString());
-            var json = JSON.fromJson(response.body(), java.util.Map.class);
-            Object validObj = json.get("valid");
-            if (validObj instanceof Boolean) {
-                return (Boolean) validObj;
-            } else if (validObj instanceof String) {
-                return Boolean.parseBoolean((String) validObj);
-            }
-            return false;
-        } catch (Exception e) {
-            return false;
+        var response = http.send(request, HttpResponse.BodyHandlers.ofString());
+        var json = JSON.fromJson(response.body(), java.util.Map.class);
+        Object validObj = json.get("valid");
+        Boolean isValid = false;
+        if (validObj instanceof Boolean) {
+            isValid = (Boolean) validObj;
+        } else if (validObj instanceof String) {
+            isValid = Boolean.parseBoolean((String) validObj);
         }
+        if (isValid) {
+            return;
+        }
+        throw new RuntimeException("Invalid project ID");
     }
 
     /**
      * Converts a comma-separated string into a list of trimmed strings.
+     * 
      * @param includedOrExcluded The comma-separated string
      * @return List of trimmed strings, or null if input is null or empty
      */
@@ -181,8 +192,10 @@ public class SandboxConnectionFactory {
                 .map(String::trim)
                 .collect(Collectors.toList());
     }
-        /**
-     * Exceptions thrown when connection to the Mindgard Sandbox WebSocket API fails.
+
+    /**
+     * Exceptions thrown when connection to the Mindgard Sandbox WebSocket API
+     * fails.
      */
     public static class ConnectionFailedException extends RuntimeException {
         public ConnectionFailedException(Exception e) {

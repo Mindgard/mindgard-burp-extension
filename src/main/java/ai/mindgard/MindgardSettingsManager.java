@@ -37,14 +37,11 @@ public class MindgardSettingsManager {
      */
     private void validateSettings (MindgardSettings newSettings) {
         // Validate project ID before saving
-        Exception validationException = null;
         try {
             SandboxConnectionFactory validator = new SandboxConnectionFactory();
             validator.validateProject(newSettings.projectID(), newSettings.getAPIUrl(), this);
         } catch (Exception e) {
-            String message = (validationException == null)
-                ? "Project ID is invalid. Please go to " + newSettings.url() + "/results to create a new project or find the ID of an existing project."
-                : "There was a problem validating the project ID: " + e.getMessage();
+            String message = "Project ID is invalid. Please go to " + newSettings.url() + "/results to create a new project or find the ID of an existing project.";
             javax.swing.SwingUtilities.invokeLater(() -> {
                 javax.swing.JOptionPane.showMessageDialog(null,
                     message,

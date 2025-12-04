@@ -1,8 +1,9 @@
 package ai.mindgard;
+
 import java.awt.*;
 import javax.swing.*;
 
-public class LoginTab extends JPanel{
+public class LoginTab extends JPanel {
 
     private int loginRow = 0;
     public JPanel loginPanel;
@@ -50,6 +51,10 @@ public class LoginTab extends JPanel{
                 desktop.browse(new java.net.URI(url));
                 JOptionPane.showMessageDialog(this, "Confirm that you see " + deviceCode.user_code());
                 auth.validate_login(deviceCode);
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Logged in successfully to " + settings.url()
+                        );
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(
                         this,
@@ -58,24 +63,21 @@ public class LoginTab extends JPanel{
                         JOptionPane.INFORMATION_MESSAGE
                         );
             }
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Logged in successfully to " + settings.url()
-            );
         });
         loginButtonPanel.add(loginButton);
     }
 
-     /**
+    /**
      * Adds a row to the login panel with a label and corresponding field.
-     * @param panel The panel to which the row will be added
-     * @param baseGbc The base GridBagConstraints to use for layout
+     * 
+     * @param panel     The panel to which the row will be added
+     * @param baseGbc   The base GridBagConstraints to use for layout
      * @param labelText The text for the label
-     * @param field The input field component
+     * @param field     The input field component
      * @return The JLabel that was added to the panel
      */
     private JLabel addLoginRow(JPanel panel, GridBagConstraints baseGbc,
-                            String labelText, JComponent field) {
+            String labelText, JComponent field) {
 
         GridBagConstraints gbcLabel = (GridBagConstraints) baseGbc.clone();
         gbcLabel.gridx = 0;
