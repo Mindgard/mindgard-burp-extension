@@ -45,8 +45,6 @@ class MindgardAuthenticationTest {
 
     @Test
     void auth() throws IOException, InterruptedException {
-        File tmpFile = File.createTempFile("mindgard","token");
-        Files.write(tmpFile.toPath(), List.of("example-token"));
         var http = mock(HttpClient.class);
         var response = mock(HttpResponse.class);
 
@@ -54,7 +52,10 @@ class MindgardAuthenticationTest {
         Function<String, BodyPublisher> matchHttpBody = token -> token.contains("example-token") ? publisher : null;
 
         mgsm.setSettings(settings);
-        var auth = new MindgardAuthentication(mgsm, tmpFile, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
+        MindgardSettingsManager mgsmSpy = spy(mgsm);
+        doReturn(new MindgardToken(settings.url(), "example-token")).when(mgsmSpy).getToken();
+
+        var auth = new MindgardAuthentication(mgsmSpy, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
 
         when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
         when(response.body()).thenReturn("{\"access_token\": \"example-access-token\", \"id_token\": \"x\", \"scope\": \"y\", \"expires_in\":\"z\", \"token_type\":\"u\"}");
@@ -66,7 +67,6 @@ class MindgardAuthenticationTest {
 
     @Test
     void loginMissingTokenFile() throws IOException, InterruptedException {
-        File tmpFile = new File("/does/not/exist");
         var http = mock(HttpClient.class);
         var response = mock(HttpResponse.class);
 
@@ -74,7 +74,10 @@ class MindgardAuthenticationTest {
         Function<String, BodyPublisher> matchHttpBody = token -> token.contains("example-token") ? publisher : null;
 
         mgsm.setSettings(settings);
-        var auth = new MindgardAuthentication(mgsm, tmpFile, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
+        MindgardSettingsManager mgsmSpy = spy(mgsm);
+        doReturn(new MindgardToken(settings.url(), "")).when(mgsmSpy).getToken();
+
+        var auth = new MindgardAuthentication(mgsmSpy, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
 
         when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
         when(response.body()).thenReturn("{\"access_token\": \"example-access-token\", \"id_token\": \"x\", \"scope\": \"y\", \"expires_in\":\"z\", \"token_type\":\"u\"}");
@@ -87,13 +90,10 @@ class MindgardAuthenticationTest {
 
     @Test
     public void login() throws IOException, InterruptedException {
-        File tmpFile = File.createTempFile("mindgard","test");
-        tmpFile.deleteOnExit();
         var http = mock(HttpClient.class);
         DeviceCodeData deviceCode = new DeviceCodeData("http://example.com/login", "http://example.com/login_complete", "user_code", "device_code", "", "");
         TokenData tokenData = new TokenData("refresh_token", "id_token", "", "", "", "", "", "");
         var deviceCodeFlow = mock(DeviceCodeFlow.class);
-
 
         when(deviceCodeFlow.getDeviceCode()).thenReturn(deviceCode);
         when(deviceCodeFlow.getToken(deviceCode))
@@ -102,13 +102,13 @@ class MindgardAuthenticationTest {
             .thenReturn(Optional.of(tokenData));
 
         mgsm.setSettings(settings);
-        var auth = new MindgardAuthentication(mgsm, tmpFile, http, body -> null,(h,p,m) -> deviceCodeFlow, () -> {});
+        MindgardSettingsManager mgsmSpy = spy(mgsm);
+        doNothing().when(mgsmSpy).setToken(anyString());
+
+        var auth = new MindgardAuthentication(mgsmSpy, http, body -> null,(h,p,m) -> deviceCodeFlow, () -> {});
         auth.validate_login(deviceCode);
         verify(deviceCodeFlow).validateIdToken("id_token");
-
-        var storedRefreshToken = Files.readAllLines(tmpFile.toPath()).get(0);
-        assertEquals("refresh_token", storedRefreshToken);
-
+        verify(mgsmSpy).setToken("refresh_token");
     }
 
 }

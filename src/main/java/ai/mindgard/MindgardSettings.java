@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import static java.util.List.of;
 import org.json.JSONObject;
 import java.util.logging.Logger;
-import ai.mindgard.sandbox.wsapi.SandboxConnectionFactory;
 
 public record MindgardSettings(
     String url,

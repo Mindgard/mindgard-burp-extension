@@ -25,7 +25,6 @@ public class MindgardAuthentication {
     private Function<String, HttpRequest.BodyPublisher> publisher;
     private final Runnable sleep;
     private final DeviceCodeFlow deviceCodeFlow;
-    private final File tokenFile;
     private MindgardSettingsManager mgsm;
 
     /**
@@ -35,7 +34,6 @@ public class MindgardAuthentication {
     public MindgardAuthentication(MindgardSettingsManager mgsm) {
         this(
             mgsm,
-            MindgardSettings.loadFile("token.txt"), 
             HttpClient.newHttpClient(), 
             HttpRequest.BodyPublishers::ofString, 
             DeviceCodeFlow::new, 
@@ -43,9 +41,8 @@ public class MindgardAuthentication {
         );
     }
 
-    public MindgardAuthentication(MindgardSettingsManager mgsm, File tokenFile, HttpClient http, Function<String,HttpRequest.BodyPublisher> bodyPublisherFactory, DeviceCodeFlow.Factory deviceCodeFlow, Runnable sleep) {
+    public MindgardAuthentication(MindgardSettingsManager mgsm, HttpClient http, Function<String,HttpRequest.BodyPublisher> bodyPublisherFactory, DeviceCodeFlow.Factory deviceCodeFlow, Runnable sleep) {
         this.mgsm = mgsm;
-        this.tokenFile = tokenFile;
         this.http = http;
         this.publisher = bodyPublisherFactory;
         this.sleep = sleep;
@@ -64,11 +61,12 @@ public class MindgardAuthentication {
      */
     public String auth() {
         var settings = mgsm.getSettings();
-        try (Stream<String> lines = Files.lines(tokenFile.toPath())) {
-            String refreshToken = lines.collect(Collectors.joining(""));
+        try {
+            MindgardToken token = mgsm.getToken();
             record RefreshToken(String grant_type, String client_id, String audience, String refresh_token) {}
             record AccessToken(String access_token, String id_token, String scope, String expires_in, String token_type) {}
-            var data = new RefreshToken("refresh_token", settings.clientID(), settings.audience(), refreshToken);
+
+            var data = new RefreshToken("refresh_token", settings.clientID(), settings.audience(), token.token());
 
             // Send the authentication request to the URL contained in the settings.
             var request = HttpRequest.newBuilder()
@@ -95,19 +93,7 @@ public class MindgardAuthentication {
             sleep.run();
         }
         deviceCodeFlow.validateIdToken(tokenData.get().id_token());
-        store(tokenData.get().refresh_token());
-    }
-
-    /**
-     * Stores the refresh token in the token file.
-     * @param refreshToken the refresh token to be stored
-     */
-    private void store(String refreshToken) {
-        try {
-            Files.writeString(tokenFile.toPath(), refreshToken);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        mgsm.setToken(tokenData.get().refresh_token());
     }
 
     private static void sleep() {
