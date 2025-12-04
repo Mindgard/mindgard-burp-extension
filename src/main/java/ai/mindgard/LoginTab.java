@@ -1,0 +1,102 @@
+package ai.mindgard;
+import java.awt.*;
+import javax.swing.*;
+
+public class LoginTab extends JPanel{
+
+    private int loginRow = 0;
+    public JPanel loginPanel;
+    public JTextField urlField;
+    public JTextField audienceField;
+    public JTextField clientIDField;
+    public JPanel loginButtonPanel;
+
+    public LoginTab(MindgardSettings settings, MindgardSettingsUI ui) {
+
+        loginPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints loginGBC = new GridBagConstraints();
+        loginGBC.gridx    = 0;
+        loginGBC.gridy    = 0;
+        loginGBC.weightx  = 1.0;
+        loginGBC.weighty  = 0.0;
+        loginGBC.insets   = new Insets(0, 0, 10, 5);
+        loginGBC.fill     = GridBagConstraints.HORIZONTAL;
+        loginGBC.anchor   = GridBagConstraints.NORTHWEST;
+        
+        urlField = new JTextField(settings.url(), 20);
+        JLabel urlFieldLabel = addLoginRow(loginPanel, loginGBC,"Mindgard URL:", urlField);
+        ui.setupUIChangeTracking(urlField, urlFieldLabel);
+
+        // Audience
+        audienceField = new JTextField(settings.audience(), 20);
+        JLabel audienceFieldLabel = addLoginRow(loginPanel, loginGBC, "Audience:", audienceField);
+        ui.setupUIChangeTracking(audienceField, audienceFieldLabel);
+
+        // Client ID
+        clientIDField = new JTextField(settings.clientID(), 20);
+        JLabel clientIDFieldLabel = addLoginRow(loginPanel, loginGBC, "Client ID:", clientIDField);
+        ui.setupUIChangeTracking(clientIDField, clientIDFieldLabel);
+
+        loginButtonPanel = new JPanel();
+        JButton loginButton = new JButton("Login");
+        loginButton.addActionListener((actionEvent) -> {
+            var auth = new MindgardAuthentication(settings);
+            var deviceCode = auth.get_device_code();
+            try {
+                Desktop desktop = Desktop.getDesktop();
+                String url = deviceCode.verification_uri_complete();
+                desktop.browse(new java.net.URI(url));
+                JOptionPane.showMessageDialog(this, "Confirm that you see " + deviceCode.user_code());
+                auth.validate_login(deviceCode);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Unable to open browser: " + e.getMessage(),
+                        "Error",
+                        JOptionPane.INFORMATION_MESSAGE
+                        );
+            }
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Logged in successfully to " + settings.url()
+            );
+        });
+        loginButtonPanel.add(loginButton);
+    }
+
+     /**
+     * Adds a row to the login panel with a label and corresponding field.
+     * @param panel The panel to which the row will be added
+     * @param baseGbc The base GridBagConstraints to use for layout
+     * @param labelText The text for the label
+     * @param field The input field component
+     * @return The JLabel that was added to the panel
+     */
+    private JLabel addLoginRow(JPanel panel, GridBagConstraints baseGbc,
+                            String labelText, JComponent field) {
+
+        GridBagConstraints gbcLabel = (GridBagConstraints) baseGbc.clone();
+        gbcLabel.gridx = 0;
+        gbcLabel.gridy = loginRow;
+        gbcLabel.weightx = 0.0;
+        gbcLabel.gridwidth = 1;
+        gbcLabel.fill = GridBagConstraints.NONE;
+        gbcLabel.anchor = GridBagConstraints.WEST;
+
+        JLabel label = new JLabel(labelText);
+        panel.add(label, gbcLabel);
+
+        GridBagConstraints gbcField = (GridBagConstraints) baseGbc.clone();
+        gbcField.gridx = 1;
+        gbcField.gridy = loginRow;
+        gbcField.weightx = 1.0;
+        gbcField.gridwidth = 1;
+        gbcField.fill = GridBagConstraints.HORIZONTAL;
+        gbcField.anchor = GridBagConstraints.WEST;
+
+        panel.add(field, gbcField);
+
+        loginRow++;
+        return label;
+    }
+}
