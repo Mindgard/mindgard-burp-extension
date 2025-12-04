@@ -1,10 +1,10 @@
 package ai.mindgard.sandbox.wsapi;
 
-import ai.mindgard.Constants;
 import ai.mindgard.JSON;
 import ai.mindgard.Log;
 import ai.mindgard.MindgardAuthentication;
 import ai.mindgard.MindgardSettings;
+import ai.mindgard.MindgardSettingsManager;
 import ai.mindgard.sandbox.Dataset;
 import ai.mindgard.sandbox.Mindgard;
 import ai.mindgard.sandbox.wsapi.messages.CliInitResponse;
@@ -143,9 +143,9 @@ public class SandboxConnectionFactory {
      * @param apiURL The base API URL
      * @return true if the project ID is valid, false otherwise
      */
-    public boolean validateProject(String projectID, String apiURL, MindgardSettings settings) {
+    public boolean validateProject(String projectID, String apiURL, MindgardSettingsManager mgsm) {
         try {
-            var auth = new MindgardAuthentication(settings);
+            var auth = new MindgardAuthentication(mgsm);
 
             var request = HttpRequest.newBuilder()
                     .uri(URI.create(apiURL + "/api/v1/projects/validate/" + projectID))

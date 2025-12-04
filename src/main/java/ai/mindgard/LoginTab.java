@@ -11,7 +11,7 @@ public class LoginTab extends JPanel{
     public JTextField clientIDField;
     public JPanel loginButtonPanel;
 
-    public LoginTab(MindgardSettings settings, MindgardSettingsUI ui) {
+    public LoginTab(MindgardSettingsManager mgsm, MindgardSettingsUI ui) {
 
         loginPanel = new JPanel(new GridBagLayout());
         GridBagConstraints loginGBC = new GridBagConstraints();
@@ -22,6 +22,8 @@ public class LoginTab extends JPanel{
         loginGBC.insets   = new Insets(0, 0, 10, 5);
         loginGBC.fill     = GridBagConstraints.HORIZONTAL;
         loginGBC.anchor   = GridBagConstraints.NORTHWEST;
+
+        var settings = mgsm.getSettings();
         
         urlField = new JTextField(settings.url(), 20);
         JLabel urlFieldLabel = addLoginRow(loginPanel, loginGBC,"Mindgard URL:", urlField);
@@ -40,7 +42,7 @@ public class LoginTab extends JPanel{
         loginButtonPanel = new JPanel();
         JButton loginButton = new JButton("Login");
         loginButton.addActionListener((actionEvent) -> {
-            var auth = new MindgardAuthentication(settings);
+            var auth = new MindgardAuthentication(mgsm);
             var deviceCode = auth.get_device_code();
             try {
                 Desktop desktop = Desktop.getDesktop();

@@ -2,7 +2,7 @@ package ai.mindgard.sandbox;
 
 import ai.mindgard.Log;
 import ai.mindgard.MindgardAuthentication;
-import ai.mindgard.MindgardSettings;
+import ai.mindgard.MindgardSettingsManager;
 import ai.mindgard.sandbox.wsapi.SandboxConnection;
 import ai.mindgard.sandbox.wsapi.SandboxConnectionFactory;
 
@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 public class MindgardWebSocketPrompts implements Mindgard {
     private final Log logger;
     private final MindgardAuthentication auth;
-    private final MindgardSettings settings;
+    private final MindgardSettingsManager mgsm;
     private final Supplier<SandboxConnectionFactory> connectionFactory;
     private BlockingDeque<Probe> newProbes = new LinkedBlockingDeque<>();
     private Pending pending = new Pending();
@@ -27,14 +27,14 @@ public class MindgardWebSocketPrompts implements Mindgard {
     private SandboxConnection connection;
     private final long pollTimeout;
 
-    public MindgardWebSocketPrompts(Log logger, MindgardAuthentication auth, MindgardSettings settings, long pollTimeoutSeconds) {
-        this(logger, auth, settings, pollTimeoutSeconds, () -> new SandboxConnectionFactory(HttpClient.newHttpClient()));
+    public MindgardWebSocketPrompts(Log logger, MindgardAuthentication auth, MindgardSettingsManager mgsm, long pollTimeoutSeconds) {
+        this(logger, auth, mgsm, pollTimeoutSeconds, () -> new SandboxConnectionFactory(HttpClient.newHttpClient()));
     }
 
-    public MindgardWebSocketPrompts(Log logger, MindgardAuthentication auth, MindgardSettings settings, long pollTimeoutSeconds, Supplier<SandboxConnectionFactory> connectionFactory) {
+    public MindgardWebSocketPrompts(Log logger, MindgardAuthentication auth, MindgardSettingsManager mgsm, long pollTimeoutSeconds, Supplier<SandboxConnectionFactory> connectionFactory) {
         this.logger = logger;
         this.auth = auth;
-        this.settings = settings;
+        this.mgsm = mgsm;
         this.connectionFactory = connectionFactory;
         this.pollTimeout = pollTimeoutSeconds;
     }
@@ -42,7 +42,7 @@ public class MindgardWebSocketPrompts implements Mindgard {
     @Override
     public void startGeneratingProbes(){
         this.started = true;
-        this.connection = connectionFactory.get().connect(this, auth, settings,logger);
+        this.connection = connectionFactory.get().connect(this, auth, mgsm.getSettings() ,logger);
         logger.log("["+ Instant.now() + "] [ws] Starting probe generation");
     }
 

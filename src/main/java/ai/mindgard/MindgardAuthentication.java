@@ -26,15 +26,15 @@ public class MindgardAuthentication {
     private final Runnable sleep;
     private final DeviceCodeFlow deviceCodeFlow;
     private final File tokenFile;
-    private MindgardSettings settings;
+    private MindgardSettingsManager mgsm;
 
     /**
      * Constructor
      * @param settings The Mindgard Settings record
      */
-    public MindgardAuthentication(MindgardSettings settings) {
+    public MindgardAuthentication(MindgardSettingsManager mgsm) {
         this(
-            settings,
+            mgsm,
             MindgardSettings.loadFile("token.txt"), 
             HttpClient.newHttpClient(), 
             HttpRequest.BodyPublishers::ofString, 
@@ -43,13 +43,13 @@ public class MindgardAuthentication {
         );
     }
 
-    public MindgardAuthentication(MindgardSettings settings, File tokenFile, HttpClient http, Function<String,HttpRequest.BodyPublisher> bodyPublisherFactory, DeviceCodeFlow.Factory deviceCodeFlow, Runnable sleep) {
-        this.settings = settings;
+    public MindgardAuthentication(MindgardSettingsManager mgsm, File tokenFile, HttpClient http, Function<String,HttpRequest.BodyPublisher> bodyPublisherFactory, DeviceCodeFlow.Factory deviceCodeFlow, Runnable sleep) {
+        this.mgsm = mgsm;
         this.tokenFile = tokenFile;
         this.http = http;
         this.publisher = bodyPublisherFactory;
         this.sleep = sleep;
-        this.deviceCodeFlow = deviceCodeFlow.create(http, publisher);
+        this.deviceCodeFlow = deviceCodeFlow.create(http, publisher, mgsm);
     }
 
     /**
@@ -63,15 +63,16 @@ public class MindgardAuthentication {
      * @throws AuthenticationFailedException if authentication fails or an error occurs during the process
      */
     public String auth() {
+        var settings = mgsm.getSettings();
         try (Stream<String> lines = Files.lines(tokenFile.toPath())) {
             String refreshToken = lines.collect(Collectors.joining(""));
             record RefreshToken(String grant_type, String client_id, String audience, String refresh_token) {}
             record AccessToken(String access_token, String id_token, String scope, String expires_in, String token_type) {}
-            var data = new RefreshToken("refresh_token", Constants.CLIENT_ID, Constants.AUDIENCE, refreshToken);
+            var data = new RefreshToken("refresh_token", settings.clientID(), settings.audience(), refreshToken);
 
             // Send the authentication request to the URL contained in the settings.
             var request = HttpRequest.newBuilder()
-                    .uri(URI.create(settings.addSubdomainToURI(settings.url(), "login") + "/oauth/token"))
+                    .uri(URI.create(settings.getLoginUrl() + "/oauth/token"))
                     .header("Content-Type", "application/json")
                     .POST(publisher.apply(json(data)))
                     .build();

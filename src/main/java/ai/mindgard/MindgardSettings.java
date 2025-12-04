@@ -132,35 +132,28 @@ public record MindgardSettings(
      * @return true is file write was succcessful.
      */
     public boolean save(String settingsFileName) {
-        // Validate project ID before saving
-        boolean valid = true;
-        Exception validationException = null;
-        try {
-            SandboxConnectionFactory validator = new SandboxConnectionFactory();
-            valid = validator.validateProject(projectID(), addSubdomainToURI(url(), "api"), this);
-        } catch (Exception e) {
-            valid = false;
-            validationException = e;
-        }
-        if (!valid) {
-            String message = (validationException == null)
-                ? "Project ID is invalid. Please go to " + url + "/results to create a new project or find the ID of an existing project."
-                : "There was a problem validating the project ID: " + validationException.getMessage();
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                javax.swing.JOptionPane.showMessageDialog(null,
-                    message,
-                    "Mindgard Settings Error",
-                    javax.swing.JOptionPane.ERROR_MESSAGE
-                );
-            });
-            return false;
-        }
-
         try {
             Files.write(MindgardSettings.loadFile(settingsFileName).toPath(), of(JSON.json(this)));
             return true;
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+
+    public String getAPIUrl() {
+        try {
+            return addSubdomainToURI(url(), "api");
+        } catch (java.net.URISyntaxException e) {
+            throw new RuntimeException("Invalid URL: " + url(), e);
+        }
+    }
+
+    public String getLoginUrl() {
+        try {
+            return addSubdomainToURI(url(), "login");
+        } catch (java.net.URISyntaxException e) {
+            throw new RuntimeException("Invalid URL: " + url(), e);
         }
     }
 }

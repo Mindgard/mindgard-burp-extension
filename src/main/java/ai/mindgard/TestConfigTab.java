@@ -34,8 +34,10 @@ public class TestConfigTab extends JPanel {
     public JFormattedTextField promptRepeatsField;
     public JFormattedTextField parallelismField;
     
-    public TestConfigTab(MindgardSettings settings, MindgardSettingsUI ui) {
+    public TestConfigTab(MindgardSettingsManager mgsm, MindgardSettingsUI ui) {
         testConfigPanel = new JPanel(new GridBagLayout());
+
+        var settings = mgsm.getSettings();
     
         // Initialise GridBagConstraints before placing any components down.
         GridBagConstraints testconfigGBC = new GridBagConstraints();

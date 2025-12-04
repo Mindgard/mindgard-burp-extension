@@ -12,13 +12,13 @@ import java.util.List;
 
 
 public class MindgardSettingsUI extends JPanel {
-    private MindgardSettings settings;
+    private MindgardSettingsManager mgsm;
     Map<Component, Object> originalValues = new HashMap<>();
     List<JLabel> changedLabels = new ArrayList<>();
 
-    public MindgardSettingsUI() {
+    public MindgardSettingsUI(MindgardSettingsManager mgsm) {
         super();
-        this.settings = getSettings();
+        this.mgsm = mgsm;
 
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -26,14 +26,15 @@ public class MindgardSettingsUI extends JPanel {
         JPanel mainPanel = new JPanel(new BorderLayout(0, 0));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
         
-        LoginTab loginTab = new LoginTab(settings, this); // passing 'this' avoids duplicating the setupUIChangeTracking method
-        TestConfigTab tcTab = new TestConfigTab(settings, this);
+        LoginTab loginTab = new LoginTab(mgsm, this); // passing 'this' avoids duplicating the setupUIChangeTracking method
+        TestConfigTab tcTab = new TestConfigTab(mgsm, this);
 
         // Save Button
         JPanel saveButtonPanel = new JPanel();
-        JButton saveButton = new JButton("Save");
+        JButton saveButton = new JButton("Save All");
         saveButton.addActionListener((actionEvent) -> {
                 saveUIContentsToSettings(
+                    // Fetch contents of test config tab
                     tcTab.selectorField.getText(),
                     tcTab.projectIDField.getText(),
                     ((Dataset)tcTab.datasetField.getSelectedItem()).getDatasetName(), 
@@ -43,6 +44,7 @@ public class MindgardSettingsUI extends JPanel {
                     tcTab.includeAttacksField.getText(),
                     Integer.parseInt(tcTab.promptRepeatsField.getText()),
                     Integer.parseInt(tcTab.parallelismField.getText()),
+                    //Fetch contents of login tab
                     loginTab.urlField.getText(),
                     loginTab.audienceField.getText(),
                     loginTab.clientIDField.getText()
@@ -57,10 +59,10 @@ public class MindgardSettingsUI extends JPanel {
         loginWrapper.add(loginTab.loginButtonPanel);
         JPanel testConfigWrapper = new JPanel(new BorderLayout());
         testConfigWrapper.add(tcTab.testConfigPanel, BorderLayout.NORTH);
-        testConfigWrapper.add(saveButtonPanel, BorderLayout.SOUTH); // Ensure save button is at the bottom
         tabs.addTab("Login", loginWrapper);
         tabs.addTab("Test Configuration", testConfigWrapper);
         add(tabs, BorderLayout.CENTER);
+        add(saveButtonPanel, BorderLayout.SOUTH); // Ensure save button is at the bottom
         
         setPreferredSize(new Dimension(300, 120));
     }
@@ -107,12 +109,7 @@ public class MindgardSettingsUI extends JPanel {
             promptRepeats,
             parallelism
         );
-        setSettings(newSettings);
-        getSettings();
-
-        if (!settings.save(Constants.SETTINGS_FILE_NAME)) {
-            return;
-        }
+        mgsm.setSettings(newSettings);
 
         JOptionPane.showMessageDialog(
                 this,
@@ -200,17 +197,5 @@ public class MindgardSettingsUI extends JPanel {
                 });
             }
         }
-
-    /**
-     * Saves new settings contents to the settings file.
-     * @param newSettings the new settings
-    */
-    public static void setSettings(MindgardSettings newSettings) {newSettings.save(Constants.SETTINGS_FILE_NAME);}
-   
-   /**
-    * Gets the settings from disk
-    * @return the populated MindgardSettings record
-    */
-    public static MindgardSettings getSettings() {return MindgardSettings.loadOrCreate(Constants.SETTINGS_FILE_NAME);}
 
 }

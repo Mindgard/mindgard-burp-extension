@@ -1,6 +1,7 @@
 package ai.mindgard.burp;
 
 import ai.mindgard.MindgardSettings;
+import ai.mindgard.MindgardSettingsManager;
 import ai.mindgard.sandbox.Mindgard;
 import ai.mindgard.sandbox.Probe;
 import burp.api.montoya.core.Annotations;
@@ -28,12 +29,12 @@ class MindgardHttpHandlerTest {
         var req = mock(RequestToBeSentAction.class);
         ObjectFactoryLocator.FACTORY = burp;
         var mindgard = mock(Mindgard.class);
-        var settings = mock(MindgardSettings.class);
+        var mgsm = mock(MindgardSettingsManager.class);
         when(mindgard.pendingProbes()).thenReturn(Collections.emptyList());
         var originalRequest = mock(HttpRequestToBeSent.class);
         when(burp.requestResult(originalRequest)).thenReturn(req);
 
-        var handler = new MindgardHttpHandler(mindgard, settings, l -> {});
+        var handler = new MindgardHttpHandler(mindgard, mgsm, l -> {});
 
         assertEquals(req, handler.handleHttpRequestToBeSent(originalRequest));
     }
@@ -44,13 +45,13 @@ class MindgardHttpHandlerTest {
         var req = mock(RequestToBeSentAction.class);
         ObjectFactoryLocator.FACTORY = burp;
         var mindgard = mock(Mindgard.class);
-        var settings = mock(MindgardSettings.class);
+        var mgsm = mock(MindgardSettingsManager.class);
         when(mindgard.pendingProbes()).thenReturn(List.of(new Probe("does-not-match","a-prompt")));
         var originalRequest = mock(HttpRequestToBeSent.class);
         when(originalRequest.bodyToString()).thenReturn("request-body");
         when(burp.requestResult(originalRequest)).thenReturn(req);
 
-        var handler = new MindgardHttpHandler(mindgard, settings, l -> {});
+        var handler = new MindgardHttpHandler(mindgard, mgsm, l -> {});
 
         assertEquals(req, handler.handleHttpRequestToBeSent(originalRequest));
     }
@@ -61,7 +62,7 @@ class MindgardHttpHandlerTest {
         var req = mock(RequestToBeSentAction.class);
         ObjectFactoryLocator.FACTORY = burp;
         var mindgard = mock(Mindgard.class);
-        var settings = mock(MindgardSettings.class);
+        var mgsm = mock(MindgardSettingsManager.class);
         var replacedRequest= mock(HttpRequest.class);
         when(mindgard.pendingProbes()).thenReturn(List.of(new Probe("guid-to-replace","a-prompt")));
         var originalRequest = mock(HttpRequestToBeSent.class);
@@ -70,7 +71,7 @@ class MindgardHttpHandlerTest {
         when(replacedRequest.withAddedHeader(any(), any())).thenReturn(replacedRequest);
         when(burp.requestResult(eq(replacedRequest), any())).thenReturn(req);
 
-        var handler = new MindgardHttpHandler(mindgard, settings, l -> {});
+        var handler = new MindgardHttpHandler(mindgard, mgsm, l -> {});
 
         assertEquals(req, handler.handleHttpRequestToBeSent(originalRequest));
         verify(replacedRequest).withAddedHeader("X-Mindgard-ID", "guid-to-replace");
@@ -82,7 +83,7 @@ class MindgardHttpHandlerTest {
         ObjectFactoryLocator.FACTORY = burp;
         var req = mock(RequestToBeSentAction.class);
         var mindgard = mock(Mindgard.class);
-        var settings = mock(MindgardSettings.class);
+        var mgsm = mock(MindgardSettingsManager.class);
         var replacedRequest= mock(HttpRequest.class);
         when(mindgard.pendingProbes()).thenReturn(List.of(new Probe("guid-to-replace","a-pr\"ompt")));
         var originalRequest = mock(HttpRequestToBeSent.class);
@@ -91,7 +92,7 @@ class MindgardHttpHandlerTest {
         when(replacedRequest.withAddedHeader(any(), any())).thenReturn(replacedRequest);
         when(burp.requestResult(eq(replacedRequest), any())).thenReturn(req);
 
-        var handler = new MindgardHttpHandler(mindgard, settings, l -> {});
+        var handler = new MindgardHttpHandler(mindgard, mgsm, l -> {});
 
         assertEquals(req, handler.handleHttpRequestToBeSent(originalRequest));
         verify(replacedRequest).withAddedHeader("X-Mindgard-ID", "guid-to-replace");
@@ -102,10 +103,12 @@ class MindgardHttpHandlerTest {
         var burp = mock(MontoyaObjectFactory.class);
         ObjectFactoryLocator.FACTORY = burp;
         var mindgard = mock(Mindgard.class);
+        var mgsm = mock(MindgardSettingsManager.class);
         var settings = mock(MindgardSettings.class);
         when(settings.selector()).thenReturn("$");
+        when(mgsm.getSettings()).thenReturn(settings);
 
-        var handler = new MindgardHttpHandler(mindgard, settings, l -> {});
+        var handler = new MindgardHttpHandler(mindgard, mgsm, l -> {});
         var originalResponse = mock(HttpResponseReceived.class);
         var originalRequest = mock(HttpRequest.class);
         var annotations = mock(Annotations.class);
@@ -129,10 +132,12 @@ class MindgardHttpHandlerTest {
         var burp = mock(MontoyaObjectFactory.class);
         ObjectFactoryLocator.FACTORY = burp;
         var mindgard = mock(Mindgard.class);
+        var mgsm = mock(MindgardSettingsManager.class);
         var settings = mock(MindgardSettings.class);
         when(settings.selector()).thenReturn("$.hello");
+        when(mgsm.getSettings()).thenReturn(settings);
 
-        var handler = new MindgardHttpHandler(mindgard, settings, l -> {});
+        var handler = new MindgardHttpHandler(mindgard, mgsm, l -> {});
         var originalResponse = mock(HttpResponseReceived.class);
         var originalRequest = mock(HttpRequest.class);
         var annotations = mock(Annotations.class);

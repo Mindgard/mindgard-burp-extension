@@ -3,6 +3,7 @@ package ai.mindgard.sandbox;
 import ai.mindgard.Log;
 import ai.mindgard.MindgardAuthentication;
 import ai.mindgard.MindgardSettings;
+import ai.mindgard.MindgardSettingsManager;
 import ai.mindgard.sandbox.wsapi.SandboxConnection;
 import ai.mindgard.sandbox.wsapi.SandboxConnectionFactory;
 import org.junit.jupiter.api.Test;
@@ -17,13 +18,13 @@ class MindgardWebSocketPromptsTest {
     @Test
     void generatedProbesFromSandboxAreEnqueuedUntilSentToTargetAppAndThenRemainPendingUntilReplySentToSandbox() {
         var auth = mock(MindgardAuthentication.class);
-        var settings = mock(MindgardSettings.class);
+        var mgsm = mock(MindgardSettingsManager.class);
         var connectionFactory = mock(SandboxConnectionFactory.class);
         var connection = mock(SandboxConnection.class);
         Log log = l -> {
         };
-        var mg = new MindgardWebSocketPrompts(log, auth, settings, 1L, () -> connectionFactory);
-        when(connectionFactory.connect(mg, auth, settings, log)).thenReturn(connection);
+        var mg = new MindgardWebSocketPrompts(log, auth, mgsm, 1L, () -> connectionFactory);
+        when(connectionFactory.connect(mg, auth, mgsm.getSettings(), log)).thenReturn(connection);
 
         // Ask sandbox to generate probes
         assertFalse(mg.isStarted());
@@ -60,13 +61,13 @@ class MindgardWebSocketPromptsTest {
     @Test
     void resetRestartsTest() {
         var auth = mock(MindgardAuthentication.class);
-        var settings = mock(MindgardSettings.class);
+        var mgsm = mock(MindgardSettingsManager.class);
         var connectionFactory = mock(SandboxConnectionFactory.class);
         var connection = mock(SandboxConnection.class);
         Log log = l -> {
         };
-        var mg = new MindgardWebSocketPrompts(log, auth, settings, 60L, () -> connectionFactory);
-        when(connectionFactory.connect(mg, auth, settings, log)).thenReturn(connection);
+        var mg = new MindgardWebSocketPrompts(log, auth, mgsm, 60L, () -> connectionFactory);
+        when(connectionFactory.connect(mg, auth, mgsm.getSettings(), log)).thenReturn(connection);
 
         assertFalse(mg.isStarted());
 

@@ -41,6 +41,8 @@ class MindgardAuthenticationTest {
         2
     );
 
+    MindgardSettingsManager mgsm = new MindgardSettingsManager();
+
     @Test
     void auth() throws IOException, InterruptedException {
         File tmpFile = File.createTempFile("mindgard","token");
@@ -51,7 +53,8 @@ class MindgardAuthenticationTest {
         BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("example-token");
         Function<String, BodyPublisher> matchHttpBody = token -> token.contains("example-token") ? publisher : null;
 
-        var auth = new MindgardAuthentication(settings, tmpFile, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
+        mgsm.setSettings(settings);
+        var auth = new MindgardAuthentication(mgsm, tmpFile, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
 
         when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
         when(response.body()).thenReturn("{\"access_token\": \"example-access-token\", \"id_token\": \"x\", \"scope\": \"y\", \"expires_in\":\"z\", \"token_type\":\"u\"}");
@@ -70,7 +73,8 @@ class MindgardAuthenticationTest {
         BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("example-token");
         Function<String, BodyPublisher> matchHttpBody = token -> token.contains("example-token") ? publisher : null;
 
-        var auth = new MindgardAuthentication(settings, tmpFile, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
+        mgsm.setSettings(settings);
+        var auth = new MindgardAuthentication(mgsm, tmpFile, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
 
         when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
         when(response.body()).thenReturn("{\"access_token\": \"example-access-token\", \"id_token\": \"x\", \"scope\": \"y\", \"expires_in\":\"z\", \"token_type\":\"u\"}");
@@ -97,7 +101,8 @@ class MindgardAuthenticationTest {
             .thenReturn(Optional.empty())
             .thenReturn(Optional.of(tokenData));
 
-        var auth = new MindgardAuthentication(settings, tmpFile, http, body -> null,(h,p) -> deviceCodeFlow, () -> {});
+        mgsm.setSettings(settings);
+        var auth = new MindgardAuthentication(mgsm, tmpFile, http, body -> null,(h,p,m) -> deviceCodeFlow, () -> {});
         auth.validate_login(deviceCode);
         verify(deviceCodeFlow).validateIdToken("id_token");
 
