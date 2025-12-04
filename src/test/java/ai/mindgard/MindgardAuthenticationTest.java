@@ -5,43 +5,21 @@ import ai.mindgard.MindgardAuthentication.AuthenticationFailedException;
 import ai.mindgard.DeviceCodeFlow.TokenData;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static ai.mindgard.MindgardAuthentication.*;
-import ai.mindgard.MindgardSettings;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 class MindgardAuthenticationTest {
-
-    MindgardSettings settings = new MindgardSettings(
-        "https://sandbox.mindgard.ai",
-        "https://sandbox.mindgard.ai/api/v1/",
-        "mindgard-client-id",
-        "selector",
-        "project-id",
-        "dataset",
-        "system-prompt",
-        "custom-dataset-filename",
-        "exclude",
-        "include",
-        3,
-        2
-    );
-
-    MindgardSettingsManager mgsm = new MindgardSettingsManager();
 
     @Test
     void auth() throws IOException, InterruptedException {
@@ -51,11 +29,18 @@ class MindgardAuthenticationTest {
         BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("example-token");
         Function<String, BodyPublisher> matchHttpBody = token -> token.contains("example-token") ? publisher : null;
 
-        mgsm.setSettings(settings);
-        MindgardSettingsManager mgsmSpy = spy(mgsm);
-        doReturn(new MindgardToken(settings.url(), "example-token")).when(mgsmSpy).getToken();
+        // Use mocks for settings and manager
+        MindgardSettings settings = mock(MindgardSettings.class);
+        when(settings.save(anyString())).thenReturn(true);
+        when(settings.getLoginUrl()).thenReturn("https://login.sandbox.mindgard.ai");
+        when(settings.clientID()).thenReturn("mindgard-client-id");
+        when(settings.audience()).thenReturn("https://mindgard-audience.com");
 
-        var auth = new MindgardAuthentication(mgsmSpy, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
+        MindgardSettingsManager mgsm = mock(MindgardSettingsManager.class);
+        when(mgsm.getSettings()).thenReturn(settings);
+        doReturn(new MindgardToken("https://sandbox.mindgard.ai", "example-token")).when(mgsm).getToken();
+
+        var auth = new MindgardAuthentication(mgsm, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
 
         when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
         when(response.body()).thenReturn("{\"access_token\": \"example-access-token\", \"id_token\": \"x\", \"scope\": \"y\", \"expires_in\":\"z\", \"token_type\":\"u\"}");
@@ -73,17 +58,20 @@ class MindgardAuthenticationTest {
         BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("example-token");
         Function<String, BodyPublisher> matchHttpBody = token -> token.contains("example-token") ? publisher : null;
 
-        mgsm.setSettings(settings);
-        MindgardSettingsManager mgsmSpy = spy(mgsm);
-        doReturn(new MindgardToken(settings.url(), "")).when(mgsmSpy).getToken();
+        MindgardSettings settings = mock(MindgardSettings.class);
+        when(settings.save(anyString())).thenReturn(true);
 
-        var auth = new MindgardAuthentication(mgsmSpy, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
+        MindgardSettingsManager mgsm = mock(MindgardSettingsManager.class);
+        when(mgsm.getSettings()).thenReturn(settings);
+        doReturn(new MindgardToken("https://sandbox.mindgard.ai", "")).when(mgsm).getToken();
+
+        var auth = new MindgardAuthentication(mgsm, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
 
         when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
         when(response.body()).thenReturn("{\"access_token\": \"example-access-token\", \"id_token\": \"x\", \"scope\": \"y\", \"expires_in\":\"z\", \"token_type\":\"u\"}");
 
         try {
-            var accessToken = auth.auth();
+            auth.auth();
             fail("Expected exception due to missing token file");
         } catch (AuthenticationFailedException e) { }
     }
@@ -101,14 +89,17 @@ class MindgardAuthenticationTest {
             .thenReturn(Optional.empty())
             .thenReturn(Optional.of(tokenData));
 
-        mgsm.setSettings(settings);
-        MindgardSettingsManager mgsmSpy = spy(mgsm);
-        doNothing().when(mgsmSpy).setToken(anyString());
+        MindgardSettings settings = mock(MindgardSettings.class);
+        when(settings.save(anyString())).thenReturn(true);
 
-        var auth = new MindgardAuthentication(mgsmSpy, http, body -> null,(h,p,m) -> deviceCodeFlow, () -> {});
+        MindgardSettingsManager mgsm = mock(MindgardSettingsManager.class);
+        when(mgsm.getSettings()).thenReturn(settings);
+        doNothing().when(mgsm).setToken(anyString());
+
+        var auth = new MindgardAuthentication(mgsm, http, body -> null,(h,p,m) -> deviceCodeFlow, () -> {});
         auth.validate_login(deviceCode);
         verify(deviceCodeFlow).validateIdToken("id_token");
-        verify(mgsmSpy).setToken("refresh_token");
+        verify(mgsm).setToken("refresh_token");
     }
 
 }
