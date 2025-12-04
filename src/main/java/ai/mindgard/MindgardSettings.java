@@ -73,11 +73,10 @@ public record MindgardSettings(
     /**
      * loadOrCreate
      * Loads the settings from file, or creates a new settings record with default values if the file doesn't exist.
-     * @param filename the name of the settings file - typically "burp.json"
      * @return a settings record containing the contents of the settings file, or defaults if it doesn't exist
      */
-    public static MindgardSettings loadOrCreate(String filename) {
-        File settingsFile = MindgardSettings.loadFile(filename);
+    public static MindgardSettings loadOrCreate() {
+        File settingsFile = MindgardSettings.loadFile(Constants.SETTINGS_FILE_NAME);
         String fileContents;
         if (settingsFile.exists()) {
             try {

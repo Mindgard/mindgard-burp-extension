@@ -10,7 +10,7 @@ public class MindgardSettingsManager {
      * When created, loads the current settings file.
      */
     public MindgardSettingsManager() {
-        this.mindgardSettings = MindgardSettings.loadOrCreate(Constants.SETTINGS_FILE_NAME);
+        this.mindgardSettings = MindgardSettings.loadOrCreate();
         this.mindgardToken = MindgardToken.loadOrCreate();
     }
 
@@ -50,6 +50,19 @@ public class MindgardSettingsManager {
      */
     public MindgardToken getToken() {
         return this.mindgardToken;
+    }
+
+    /**
+     * Determines whether the current state of the settings indicates a valid login
+     *
+     * @return whether or not the current state should be deemed "logged in"
+     */
+    public Boolean validLogin() {
+        if (mindgardToken.token().equals("")) {
+            return false;
+        }
+
+        return mindgardToken.url().equals(mindgardSettings.url());
     }
 
     /**
