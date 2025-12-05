@@ -41,6 +41,15 @@ public class MindgardWebSocketPrompts implements Mindgard {
 
     @Override
     public void startGeneratingProbes(){
+        if (!mgsm.validLogin()) {
+            logger.log("["+ Instant.now() + "] ERROR: User not logged in.");
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                javax.swing.JOptionPane.showMessageDialog(null,
+                        "You must be logged into your Mindgard tenant to use this generator.\nPlease log in on the Mindgard tab.",
+                        "Mindgard Settings Error",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+            });
+        }
         this.started = true;
         this.connection = connectionFactory.get().connect(this, auth, mgsm.getSettings() ,logger);
         logger.log("["+ Instant.now() + "] [ws] Starting probe generation");

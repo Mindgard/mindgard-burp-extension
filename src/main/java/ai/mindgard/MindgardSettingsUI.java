@@ -49,6 +49,7 @@ public class MindgardSettingsUI extends JPanel {
                     loginTab.audienceField.getText(),
                     loginTab.clientIDField.getText()
                 );
+                loginTab.updateLoginStatus(this.mgsm);
         });
 
         saveButtonPanel.add(saveButton);

@@ -29,6 +29,8 @@ class MindgardWebSocketPromptsTest {
         // Ask sandbox to generate probes
         assertFalse(mg.isStarted());
 
+        when(mgsm.validLogin()).thenReturn(true);
+
         mg.startGeneratingProbes();
 
         assertTrue(mg.isStarted());
@@ -70,6 +72,8 @@ class MindgardWebSocketPromptsTest {
         when(connectionFactory.connect(mg, auth, mgsm.getSettings(), log)).thenReturn(connection);
 
         assertFalse(mg.isStarted());
+
+        when(mgsm.validLogin()).thenReturn(true);
 
         mg.push(new Probe("123", "Prompt"));
         mg.startGeneratingProbes();

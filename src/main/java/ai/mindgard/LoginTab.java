@@ -11,6 +11,7 @@ public class LoginTab extends JPanel {
     public JTextField audienceField;
     public JTextField clientIDField;
     public JPanel loginButtonPanel;
+    private JLabel loginStatusLabel;
 
     public LoginTab(MindgardSettingsManager mgsm, MindgardSettingsUI ui) {
 
@@ -40,6 +41,16 @@ public class LoginTab extends JPanel {
         JLabel clientIDFieldLabel = addLoginRow(loginPanel, loginGBC, "Client ID:", clientIDField);
         ui.setupUIChangeTracking(clientIDField, clientIDFieldLabel);
 
+        // Add login status label
+        loginStatusLabel = new JLabel();
+        updateLoginStatus(mgsm);
+        GridBagConstraints statusGBC = (GridBagConstraints) loginGBC.clone();
+        statusGBC.gridx = 0;
+        statusGBC.gridy = loginRow++;
+        statusGBC.gridwidth = 2;
+        statusGBC.anchor = GridBagConstraints.WEST;
+        loginPanel.add(loginStatusLabel, statusGBC);
+
         loginButtonPanel = new JPanel();
         JButton loginButton = new JButton("Login");
         loginButton.addActionListener((actionEvent) -> {
@@ -55,6 +66,7 @@ public class LoginTab extends JPanel {
                         this,
                         "Logged in successfully to " + settings.url()
                         );
+                updateLoginStatus(mgsm);
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(
                         this,
@@ -65,6 +77,15 @@ public class LoginTab extends JPanel {
             }
         });
         loginButtonPanel.add(loginButton);
+    }
+
+    // Helper to update login status label
+    public void updateLoginStatus(MindgardSettingsManager mgsm) {
+        if (mgsm.validLogin()) {
+            loginStatusLabel.setText("You are logged in to " + mgsm.getSettings().url());
+        } else {
+            loginStatusLabel.setText("You do not have an active login for this tenant, please log in.");
+        }
     }
 
     /**
