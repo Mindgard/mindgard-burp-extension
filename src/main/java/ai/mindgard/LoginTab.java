@@ -17,18 +17,18 @@ public class LoginTab extends JPanel {
 
         loginPanel = new JPanel(new GridBagLayout());
         GridBagConstraints loginGBC = new GridBagConstraints();
-        loginGBC.gridx    = 0;
-        loginGBC.gridy    = 0;
-        loginGBC.weightx  = 1.0;
-        loginGBC.weighty  = 0.0;
-        loginGBC.insets   = new Insets(0, 0, 10, 5);
-        loginGBC.fill     = GridBagConstraints.HORIZONTAL;
-        loginGBC.anchor   = GridBagConstraints.NORTHWEST;
+        loginGBC.gridx = 0;
+        loginGBC.gridy = 0;
+        loginGBC.weightx = 1.0;
+        loginGBC.weighty = 0.0;
+        loginGBC.insets = new Insets(0, 0, 10, 5);
+        loginGBC.fill = GridBagConstraints.HORIZONTAL;
+        loginGBC.anchor = GridBagConstraints.NORTHWEST;
 
         var settings = mgsm.getSettings();
-        
+
         urlField = new JTextField(settings.url(), 20);
-        JLabel urlFieldLabel = addLoginRow(loginPanel, loginGBC,"Mindgard URL:", urlField);
+        JLabel urlFieldLabel = addLoginRow(loginPanel, loginGBC, "Mindgard URL:", urlField);
         ui.setupUIChangeTracking(urlField, urlFieldLabel);
 
         // Audience
@@ -54,6 +54,17 @@ public class LoginTab extends JPanel {
         loginButtonPanel = new JPanel();
         JButton loginButton = new JButton("Login");
         loginButton.addActionListener((actionEvent) -> {
+            loginButton.setEnabled(false); // Disable button
+            if (ui.hasUnsavedChanges()) {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "You have unsaved changes. Please save your settings before logging in.",
+                    "Unsaved Changes",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                loginButton.setEnabled(true);
+                return;
+            }
             var auth = new MindgardAuthentication(mgsm);
             var deviceCode = auth.get_device_code();
             try {
@@ -61,19 +72,62 @@ public class LoginTab extends JPanel {
                 String url = deviceCode.verification_uri_complete();
                 desktop.browse(new java.net.URI(url));
                 JOptionPane.showMessageDialog(this, "Confirm that you see " + deviceCode.user_code());
-                auth.validate_login(deviceCode);
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Logged in successfully to " + settings.url()
-                        );
-                updateLoginStatus(mgsm);
+
+                // Run validate_login in a background thread with timeout
+                SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                    private Exception error = null;
+
+                    @Override
+                    protected Void doInBackground() {
+                        Thread timeoutThread = new Thread(() -> {
+                            try {
+                                Thread.sleep(60000); // 60 seconds
+                                if (!isDone()) {
+                                    cancel(true);
+                                }
+                            } catch (InterruptedException ignored) {
+                            }
+                        });
+                        timeoutThread.start();
+                        try {
+                            auth.validate_login(deviceCode);
+                        } catch (Exception e) {
+                            error = e;
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    protected void done() {
+                        loginButton.setEnabled(true); // Re-enable button
+                        if (isCancelled()) {
+                            JOptionPane.showMessageDialog(
+                                    LoginTab.this,
+                                    "Login to Mindgard timed out - please try again.",
+                                    "Mindgard Login",
+                                    JOptionPane.ERROR_MESSAGE);
+                        } else if (error != null) {
+                            JOptionPane.showMessageDialog(
+                                    LoginTab.this,
+                                    "Login failed: " + error.getMessage(),
+                                    "Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            JOptionPane.showMessageDialog(
+                                    LoginTab.this,
+                                    "Logged in successfully to " + mgsm.getSettings().url());
+                            updateLoginStatus(mgsm);
+                        }
+                    }
+                };
+                worker.execute();
             } catch (Exception e) {
+                loginButton.setEnabled(true); // Re-enable button on browser error
                 JOptionPane.showMessageDialog(
                         this,
                         "Unable to open browser: " + e.getMessage(),
                         "Error",
-                        JOptionPane.INFORMATION_MESSAGE
-                        );
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         });
         loginButtonPanel.add(loginButton);

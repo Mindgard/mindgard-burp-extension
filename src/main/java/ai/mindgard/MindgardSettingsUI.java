@@ -125,6 +125,11 @@ public class MindgardSettingsUI extends JPanel {
         });
     }
 
+    // Returns true if there are unsaved changes in the UI
+    public boolean hasUnsavedChanges() {
+        return !changedLabels.isEmpty();
+    }
+
     /**
      * Sets up change tracking for a given UI field and its associated label.
      * 
