@@ -2,7 +2,7 @@ package ai.mindgard.burp;
 
 import ai.mindgard.JSON;
 import ai.mindgard.Log;
-import ai.mindgard.MindgardSettings;
+import ai.mindgard.MindgardSettingsManager;
 import ai.mindgard.sandbox.Mindgard;
 import ai.mindgard.sandbox.Probe;
 import burp.api.montoya.http.handler.*;
@@ -18,12 +18,12 @@ import static burp.api.montoya.http.handler.ResponseReceivedAction.continueWith;
 public class MindgardHttpHandler implements HttpHandler {
     private final Mindgard mindgard;
     private final Log logger;
-    private final MindgardSettings settings;
+    private final MindgardSettingsManager mgsm;
 
-    public MindgardHttpHandler(Mindgard mindgard, MindgardSettings settings, Log logger) {
+    public MindgardHttpHandler(Mindgard mindgard, MindgardSettingsManager mgsm, Log logger) {
         this.mindgard = mindgard;
         this.logger = logger;
-        this.settings = settings;
+        this.mgsm = mgsm;
     }
 
     @Override
@@ -75,6 +75,7 @@ public class MindgardHttpHandler implements HttpHandler {
     }
 
     private String extractReplyFromJSON(String body) {
+        var settings = mgsm.getSettings();
         return JsonPath.read(body, settings.selector()).toString();
     }
 

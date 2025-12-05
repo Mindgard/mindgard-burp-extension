@@ -27,11 +27,17 @@ class DeviceCodeFlowTest {
         var response = mock(HttpResponse.class);
 
         var tokenData = new DeviceCodeFlow.DeviceCodeData("verification_uri", "verification_uri_complete","user_code","device_code","expires_in","interval");
+        
+        var mgsm = mock(MindgardSettingsManager.class);
+        var settings = mock(MindgardSettings.class);
+        when(mgsm.getSettings()).thenReturn(settings);
+        when(settings.getLoginUrl()).thenReturn("https://login.sandbox.mindgard.ai");
+        when(settings.clientID()).thenReturn("mindgard-clientID");
+        when(settings.audience()).thenReturn("https://mindgard-audience.com");
 
-        var matchHttpBody = mockHttp(json(DeviceCodePayload.INSTANCE),json(tokenData), publisher, http, response);
+        var matchHttpBody = mockHttp(json(new DeviceCodePayload(mgsm.getSettings().clientID(), "openid profile email offline_access", mgsm.getSettings().audience())),json(tokenData), publisher, http, response);
 
-
-        var actual = new DeviceCodeFlow(http, matchHttpBody).getDeviceCode();
+        var actual = new DeviceCodeFlow(http, matchHttpBody,mgsm).getDeviceCode();
 
         assertEquals(tokenData, actual);
     }
@@ -39,13 +45,19 @@ class DeviceCodeFlowTest {
     @Test
     void getToken() throws IOException, InterruptedException {
         HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("example-token");
+        var mgsm = mock(MindgardSettingsManager.class);
+        var settings = mock(MindgardSettings.class);
+        when(mgsm.getSettings()).thenReturn(settings);
+        when(settings.getLoginUrl()).thenReturn("https://login.sandbox.mindgard.ai");
+        when(settings.clientID()).thenReturn("mindgard-clientID");
+        when(settings.audience()).thenReturn("https://mindgard-audience.com");
 
         var deviceCodeData = new DeviceCodeFlow.DeviceCodeData("verification_uri", "verification_uri_complete","user_code","device_code","expires_in","interval");
         var tokenPayload = new DeviceCodeFlow.TokenPayload(
                 "urn:ietf:params:oauth:grant-type:device_code",
                 deviceCodeData.device_code(),
-                Constants.CLIENT_ID,
-                Constants.AUDIENCE
+                settings.clientID(),
+                settings.audience()
         );
         var tokenData = new DeviceCodeFlow.TokenData("refresh_token", "id_token",null,null,"access_token","scope","expires_in","token_type");
         var http = mock(HttpClient.class);
@@ -53,7 +65,7 @@ class DeviceCodeFlowTest {
 
         var matchHttpBody = mockHttp(json(tokenPayload), json(tokenData), publisher, http, response);
 
-        var actual = new DeviceCodeFlow(http, matchHttpBody).getToken(deviceCodeData);
+        var actual = new DeviceCodeFlow(http, matchHttpBody, mgsm).getToken(deviceCodeData);
 
         assertEquals(tokenData, actual.get());
     }

@@ -8,6 +8,9 @@ import org.json.JSONObject;
 import java.util.logging.Logger;
 
 public record MindgardSettings(
+    String url,
+    String audience,
+    String clientID,
     String selector, 
     String projectID, 
     String dataset, 
@@ -18,6 +21,44 @@ public record MindgardSettings(
     Integer promptRepeats, 
     Integer parallelism
 ) {
+    /**
+     * Mindgard Settings Record
+     * Constructor defaults to the sanbox Mindgard tenancy, if one isn't given.
+     */
+    public MindgardSettings {
+        if (url == null || url.equals("") ) {url = Constants.FRONTEND_URL;}
+        if (audience == null || audience.equals("")) {audience = Constants.AUDIENCE;}
+        if (clientID == null || clientID.equals("")) {clientID = Constants.CLIENT_ID;}
+    }
+
+    /**
+     * Helper method to add a subdomain to a given URI.
+     *
+     * @param sourceUri the original URI
+     * @param subdomain the subdomain to add
+     * @return the new URI with the subdomain added
+     */
+    public String addSubdomainToURI(String sourceUri, String subdomain) throws java.net.URISyntaxException {
+        java.net.URI uri = new java.net.URI(sourceUri);
+        String host = uri.getHost();
+
+        if (host == null) {
+            throw new IllegalArgumentException("Invalid or relative url :" + url);
+        }
+
+        String newHost = subdomain + "." + host;
+        java.net.URI newUri = new java.net.URI(
+                uri.getScheme(),
+                uri.getUserInfo(),
+                newHost,
+                uri.getPort(),
+                uri.getPath(),
+                uri.getQuery(),
+                uri.getFragment());
+
+        return newUri.toString();
+    }
+
     /**
      * loadSettingsFile
      * @param name the file name to be created
@@ -32,10 +73,9 @@ public record MindgardSettings(
     /**
      * loadOrCreate
      * Loads the settings from file, or creates a new settings record with default values if the file doesn't exist.
-     * @param filename the name of the settings file - typically "burp.json"
      * @return a settings record containing the contents of the settings file, or defaults if it doesn't exist
      */
-    public static MindgardSettings loadOrCreate(String filename) {
+    public static MindgardSettings loadOrCreate() {
         File settingsFile = MindgardSettings.loadFile(Constants.SETTINGS_FILE_NAME);
         String fileContents;
         if (settingsFile.exists()) {
@@ -44,17 +84,23 @@ public record MindgardSettings(
                 JSONObject json = new JSONObject(fileContents);
                 
                 //Populates with a default value if key doesn't exist.
+                String url = json.optString("url", Constants.FRONTEND_URL);
+                String audience = json.optString("audience", Constants.AUDIENCE);
+                String clientID = json.optString("clientID", Constants.CLIENT_ID);
                 String selector = json.optString("selector", "");
                 String projectID = json.optString("projectID", "");
                 String dataset = json.optString("dataset", "");
                 String systemPrompt = json.optString("systemPrompt", "");
-                String customDatasetFilename = json.optString("customDatasetFilename", "");
+                String customDatasetFilename = json.optString("customDatasetFilename", null);
                 String exclude = json.optString("exclude", "");
                 String include = json.optString("include", "");
                 Integer promptRepeats = json.has("promptRepeats") ? json.optInt("promptRepeats") : 1;
                 Integer parallelism = json.has("parallelism") ? json.optInt("parallelism") : 1;
             
                 return new MindgardSettings(
+                    url,
+                    audience,
+                    clientID,
                     selector,
                     projectID,
                     dataset,
@@ -73,7 +119,7 @@ public record MindgardSettings(
         }
         //Return defaults if file doesn't exist
          return new MindgardSettings(
-                    "", "", "", "", "", "", "", 1, 1
+                    Constants.FRONTEND_URL, Constants.AUDIENCE, Constants.CLIENT_ID,"", "", "", "", null, "", "", 1, 1
         );
     }
 
@@ -84,35 +130,28 @@ public record MindgardSettings(
      * @return true is file write was succcessful.
      */
     public boolean save(String settingsFileName) {
-        // Validate project ID before saving
-        boolean valid = true;
-        Exception validationException = null;
-        try {
-            ai.mindgard.sandbox.wsapi.SandboxConnectionFactory validator = new ai.mindgard.sandbox.wsapi.SandboxConnectionFactory();
-            valid = validator.validateProject(projectID());
-        } catch (Exception e) {
-            valid = false;
-            validationException = e;
-        }
-        if (!valid) {
-            String message = (validationException == null)
-                ? "Project ID is invalid. Please go to " + Constants.FRONTEND_URL + "/results to create a new project or find the ID of an existing project."
-                : "There was a problem validating the project ID: " + validationException.getMessage();
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                javax.swing.JOptionPane.showMessageDialog(null,
-                    message,
-                    "Mindgard Settings Error",
-                    javax.swing.JOptionPane.ERROR_MESSAGE
-                );
-            });
-            return false;
-        }
-
         try {
             Files.write(MindgardSettings.loadFile(settingsFileName).toPath(), of(JSON.json(this)));
             return true;
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+
+    public String getAPIUrl() {
+        try {
+            return addSubdomainToURI(url(), "api");
+        } catch (java.net.URISyntaxException e) {
+            throw new RuntimeException("Invalid URL: " + url(), e);
+        }
+    }
+
+    public String getLoginUrl() {
+        try {
+            return addSubdomainToURI(url(), "login");
+        } catch (java.net.URISyntaxException e) {
+            throw new RuntimeException("Invalid URL: " + url(), e);
         }
     }
 }
