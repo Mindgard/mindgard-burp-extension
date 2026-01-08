@@ -21,7 +21,6 @@ public class MindgardSettingsManager {
      * @param newSettings the new settings
      */
     public void setSettings(MindgardSettings newSettings) {
-        validateSettings(newSettings);
         newSettings.save(Constants.SETTINGS_FILE_NAME);
         this.mindgardSettings = newSettings;
     }
@@ -63,28 +62,5 @@ public class MindgardSettingsManager {
         }
 
         return mindgardToken.url().equals(mindgardSettings.url());
-    }
-
-    /**
-     * Validates settings before saving
-     * Throws error message if project ID doesn't exist in the user's tenancy.
-     * 
-     * @param newSettings the new settings to be validated
-     */
-    private void validateSettings(MindgardSettings newSettings) {
-        // Validate project ID before saving
-        try {
-            SandboxConnectionFactory validator = new SandboxConnectionFactory();
-            validator.validateProject(newSettings.projectID(), newSettings.getAPIUrl(), this);
-        } catch (Exception e) {
-            String message = "Project ID is invalid. Please go to " + newSettings.url()
-                    + "/results to create a new project or find the ID of an existing project.";
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                javax.swing.JOptionPane.showMessageDialog(null,
-                        message,
-                        "Mindgard Settings Error",
-                        javax.swing.JOptionPane.ERROR_MESSAGE);
-            });
-        }
     }
 }

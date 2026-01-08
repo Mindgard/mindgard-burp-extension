@@ -147,38 +147,6 @@ public class SandboxConnectionFactory {
     }
 
     /**
-     * Validates the provided project ID against the Mindgard API.
-     * 
-     * @param projectID The project ID to validate
-     * @param apiURL    The base API URL
-     * @return true if the project ID is valid, false otherwise
-     */
-    public void validateProject(String projectID, String apiURL, MindgardSettingsManager mgsm) throws Exception {
-        var auth = new MindgardAuthentication(mgsm);
-
-        var request = HttpRequest.newBuilder()
-                .uri(URI.create(apiURL + "/api/v1/projects/validate/" + projectID))
-                .header("Accept", "application/json")
-                .header("Authorization", "Bearer " + auth.auth())
-                .GET()
-                .build();
-
-        var response = http.send(request, HttpResponse.BodyHandlers.ofString());
-        var json = JSON.fromJson(response.body(), java.util.Map.class);
-        Object validObj = json.get("valid");
-        Boolean isValid = false;
-        if (validObj instanceof Boolean) {
-            isValid = (Boolean) validObj;
-        } else if (validObj instanceof String) {
-            isValid = Boolean.parseBoolean((String) validObj);
-        }
-        if (isValid) {
-            return;
-        }
-        throw new RuntimeException("Invalid project ID");
-    }
-
-    /**
      * Converts a comma-separated string into a list of trimmed strings.
      * 
      * @param includedOrExcluded The comma-separated string
