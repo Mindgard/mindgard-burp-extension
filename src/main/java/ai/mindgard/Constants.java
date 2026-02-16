@@ -6,7 +6,7 @@ public final class Constants {
     public static final String SETTINGS_FILE_NAME = "burp.json";
     public static final String TOKEN_FILE_NAME = "token.json";
     public static final String CLIENT_ID = "mBSDAk4R283BeGC17Uvbyo3vSAAGL67J";
-    public static final String AUDIENCE = "https://prod-pov-demo-orchestrator.com/";
+    public static final String AUDIENCE = "https://prod-pov-demo-orchestrator.com";
     public static final String LOGIN_DOMAIN = "https://login.demo.us.mindgard.ai";
 
     private Constants() {}
