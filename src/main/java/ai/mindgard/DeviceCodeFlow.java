@@ -5,6 +5,7 @@ import com.auth0.jwk.JwkProviderBuilder;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -59,7 +60,7 @@ public class DeviceCodeFlow {
     public record DeviceCodePayload(String client_id, String scope, String audience){}
     public record DeviceCodeData(String verification_uri, String verification_uri_complete, String user_code, String device_code, String expires_in, String interval) {}
 
-    public DeviceCodeData getDeviceCode() {;
+    public DeviceCodeData getDeviceCode(Log logger) {;
         var settings = mgsm.getSettings();
         var request = HttpRequest.newBuilder()
                 .uri(URI.create(settings.getLoginUrl() + "/oauth/device/code"))
@@ -69,8 +70,12 @@ public class DeviceCodeFlow {
                     "openid profile email offline_access",
                     settings.audience()))))
                 .build();
+        logger.log("Settings login URL: " + settings.getLoginUrl());
+        logger.log("Client DID: " + settings.clientID());
         try {
             var response = http.send(request, HttpResponse.BodyHandlers.ofString());
+            logger.log("Received response for device code request: " + response.body());
+            logger.log("Response status code: " + response.statusCode());
             return fromJson(response.body(), DeviceCodeData.class);
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -3,6 +3,8 @@ package ai.mindgard;
 import java.awt.*;
 import javax.swing.*;
 
+import ai.mindgard.DeviceCodeFlow.DeviceCodeData;
+
 public class LoginTab extends JPanel {
 
     private int loginRow = 0;
@@ -12,8 +14,10 @@ public class LoginTab extends JPanel {
     public JTextField clientIDField;
     public JPanel loginButtonPanel;
     private JLabel loginStatusLabel;
+    private Log logger;
 
-    public LoginTab(MindgardSettingsManager mgsm, MindgardSettingsUI ui) {
+    public LoginTab(MindgardSettingsManager mgsm, MindgardSettingsUI ui, Log logger) {
+        this.logger = logger;
 
         loginPanel = new JPanel(new GridBagLayout());
         GridBagConstraints loginGBC = new GridBagConstraints();
@@ -66,9 +70,18 @@ public class LoginTab extends JPanel {
                 return;
             }
             var auth = new MindgardAuthentication(mgsm);
-            var deviceCode = auth.get_device_code();
+            DeviceCodeData deviceCode;
+            logger.log("Initiating login to Mindgard tenant");
+            try {
+                deviceCode = auth.get_device_code(logger);
+            } catch (Exception e) {
+                logger.log("Andrew "+ e.getMessage());
+                loginButton.setEnabled(true);
+                return;
+            }
             try {
                 Desktop desktop = Desktop.getDesktop();
+                logger.log("Opening browser to: " + deviceCode.verification_uri_complete());
                 String url = deviceCode.verification_uri_complete();
                 desktop.browse(new java.net.URI(url));
                 JOptionPane.showMessageDialog(this, "Confirm that you see " + deviceCode.user_code());

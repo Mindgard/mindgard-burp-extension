@@ -115,5 +115,5 @@ public class MindgardAuthentication {
     /**
      * @return the device code data
      */
-    public DeviceCodeData get_device_code() {return deviceCodeFlow.getDeviceCode(); }
+    public DeviceCodeData get_device_code(Log logger) {return deviceCodeFlow.getDeviceCode(logger); }
 }

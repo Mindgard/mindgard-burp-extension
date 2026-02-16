@@ -83,7 +83,7 @@ class MindgardAuthenticationTest {
         TokenData tokenData = new TokenData("refresh_token", "id_token", "", "", "", "", "", "");
         var deviceCodeFlow = mock(DeviceCodeFlow.class);
 
-        when(deviceCodeFlow.getDeviceCode()).thenReturn(deviceCode);
+        when(deviceCodeFlow.getDeviceCode(any(Log.class))).thenReturn(deviceCode);
         when(deviceCodeFlow.getToken(deviceCode))
             .thenReturn(Optional.empty())
             .thenReturn(Optional.empty())

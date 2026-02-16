@@ -37,7 +37,7 @@ class DeviceCodeFlowTest {
 
         var matchHttpBody = mockHttp(json(new DeviceCodePayload(mgsm.getSettings().clientID(), "openid profile email offline_access", mgsm.getSettings().audience())),json(tokenData), publisher, http, response);
 
-        var actual = new DeviceCodeFlow(http, matchHttpBody,mgsm).getDeviceCode();
+        var actual = new DeviceCodeFlow(http, matchHttpBody,mgsm).getDeviceCode(mock(Log.class));
 
         assertEquals(tokenData, actual);
     }
