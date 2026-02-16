@@ -14,10 +14,12 @@ public class MindgardSettingsUI extends JPanel {
     private MindgardSettingsManager mgsm;
     Map<Component, Object> originalValues = new HashMap<>();
     List<JLabel> changedLabels = new ArrayList<>();
+    private Log logger;
 
-    public MindgardSettingsUI(MindgardSettingsManager mgsm) {
+    public MindgardSettingsUI(MindgardSettingsManager mgsm, Log logger) {
         super();
         this.mgsm = mgsm;
+        this.logger = logger;
 
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -125,6 +127,7 @@ public class MindgardSettingsUI extends JPanel {
         changedLabels.forEach(label -> {
             label.setForeground(Color.BLACK);
         });
+        changedLabels.clear();
     }
 
     // Returns true if there are unsaved changes in the UI

@@ -14,9 +14,9 @@ public class MindgardExtension implements BurpExtension {
     @Override
     public void initialize(MontoyaApi api) {
         api.extension().setName(getClass().getSimpleName());
-        MindgardSettingsManager mgsm = new MindgardSettingsManager();
-        MindgardSettingsUI userInterface = new MindgardSettingsUI(mgsm);
         Log logger = api.logging()::logToOutput;
+        MindgardSettingsManager mgsm = new MindgardSettingsManager();
+        MindgardSettingsUI userInterface = new MindgardSettingsUI(mgsm, logger);
         var auth = new MindgardAuthentication(mgsm);
         Mindgard mg = new MindgardWebSocketPrompts(logger, auth, mgsm, 60L);
 
