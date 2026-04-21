@@ -121,8 +121,8 @@ public class TestConfigTab extends JPanel {
         datasetButtons.add(clearButton);
         addTestConfigRow(testConfigPanel, testconfigGBC, "", datasetButtons);
 
-        // Enable/disable fields based on radio selection
-        Runnable updateDatasetFields = () -> {
+        // Show/hide fields based on radio selection
+        Runnable showHideDatasetFields = () -> {
             boolean useDomain = datasetRadio.isSelected();
             datasetField.setVisible(useDomain);
             datasetLabel.setVisible(useDomain);
@@ -132,9 +132,18 @@ public class TestConfigTab extends JPanel {
             testConfigPanel.revalidate();
             testConfigPanel.repaint();
         };
-        datasetRadio.addActionListener(e -> updateDatasetFields.run());
-        customDatasetRadio.addActionListener(e -> updateDatasetFields.run());
-        updateDatasetFields.run();
+        // When switching, clear the inactive selection to prevent both being saved
+        datasetRadio.addActionListener(e -> {
+            customDatasetPathLabel.setText("No file selected");
+            customDataset = null;
+            customDatasetField.setSelectedFile(null);
+            showHideDatasetFields.run();
+        });
+        customDatasetRadio.addActionListener(e -> {
+            datasetField.setSelectedIndex(0); // Reset to Default
+            showHideDatasetFields.run();
+        });
+        showHideDatasetFields.run();
 
         // System Prompt
         systemPromptField = new JTextArea(settings.systemPrompt(), 5, 20);
