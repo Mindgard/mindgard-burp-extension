@@ -16,6 +16,7 @@ import java.util.function.Function;
 
 import static ai.mindgard.JSON.fromJson;
 import static ai.mindgard.JSON.json;
+import ai.mindgard.exception.*;;
 
 public class DeviceCodeFlow {
     private final HttpClient http;
@@ -73,7 +74,7 @@ public class DeviceCodeFlow {
             var response = http.send(request, HttpResponse.BodyHandlers.ofString());
             return fromJson(response.body(), DeviceCodeData.class);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new LoginException("Failed to get device code", e);
         }
 
     }

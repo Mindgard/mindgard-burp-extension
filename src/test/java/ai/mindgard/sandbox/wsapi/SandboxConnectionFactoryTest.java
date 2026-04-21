@@ -154,7 +154,7 @@ class SandboxConnectionFactoryTest {
                 settings.projectID(),
                 1,
                 settings.systemPrompt(),
-                JSON.json(customDataset),
+                null,
                 JSON.json(customDataset),
                 "llm",
                 "user",

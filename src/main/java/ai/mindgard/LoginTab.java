@@ -2,6 +2,7 @@ package ai.mindgard;
 
 import java.awt.*;
 import javax.swing.*;
+import javax.swing.SwingUtilities;
 
 public class LoginTab extends JPanel {
 
@@ -65,70 +66,68 @@ public class LoginTab extends JPanel {
                 loginButton.setEnabled(true);
                 return;
             }
-            var auth = new MindgardAuthentication(mgsm);
-            var deviceCode = auth.get_device_code();
-            try {
-                Desktop desktop = Desktop.getDesktop();
-                String url = deviceCode.verification_uri_complete();
-                desktop.browse(new java.net.URI(url));
-                JOptionPane.showMessageDialog(this, "Confirm that you see " + deviceCode.user_code());
 
-                // Run validate_login in a background thread with timeout
-                SwingWorker<Void, Void> worker = new SwingWorker<>() {
-                    private Exception error = null;
+            // Run entire login flow in a background thread to avoid blocking the UI
+            SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                private Exception error = null;
 
-                    @Override
-                    protected Void doInBackground() {
-                        Thread timeoutThread = new Thread(() -> {
-                            try {
-                                Thread.sleep(60000); // 60 seconds
-                                if (!isDone()) {
-                                    cancel(true);
-                                }
-                            } catch (InterruptedException ignored) {
-                            }
-                        });
-                        timeoutThread.start();
+                @Override
+                protected Void doInBackground() {
+                    Thread timeoutThread = new Thread(() -> {
                         try {
-                            auth.validate_login(deviceCode);
-                        } catch (Exception e) {
-                            error = e;
+                            Thread.sleep(60000); // 60 seconds
+                            if (!isDone()) {
+                                cancel(true);
+                            }
+                        } catch (InterruptedException ignored) {
                         }
-                        return null;
-                    }
+                    });
+                    timeoutThread.start();
+                    try {
+                        var auth = new MindgardAuthentication(mgsm);
+                        var deviceCode = auth.get_device_code();
 
-                    @Override
-                    protected void done() {
-                        loginButton.setEnabled(true); // Re-enable button
-                        if (isCancelled()) {
-                            JOptionPane.showMessageDialog(
-                                    LoginTab.this,
-                                    "Login to Mindgard timed out - please try again.",
-                                    "Mindgard Login",
-                                    JOptionPane.ERROR_MESSAGE);
-                        } else if (error != null) {
-                            JOptionPane.showMessageDialog(
-                                    LoginTab.this,
-                                    "Login failed: " + error.getMessage(),
-                                    "Error",
-                                    JOptionPane.ERROR_MESSAGE);
-                        } else {
-                            JOptionPane.showMessageDialog(
-                                    LoginTab.this,
-                                    "Logged in successfully to " + mgsm.getSettings().url());
-                            updateLoginStatus(mgsm);
-                        }
+                        Desktop desktop = Desktop.getDesktop();
+                        String url = deviceCode.verification_uri_complete();
+                        desktop.browse(new java.net.URI(url));
+
+                        // Show confirmation dialog on EDT
+                        SwingUtilities.invokeAndWait(() ->
+                            JOptionPane.showMessageDialog(LoginTab.this,
+                                "Confirm that you see " + deviceCode.user_code())
+                        );
+
+                        auth.validate_login(deviceCode);
+                    } catch (Exception e) {
+                        error = e;
                     }
-                };
-                worker.execute();
-            } catch (Exception e) {
-                loginButton.setEnabled(true); // Re-enable button on browser error
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Unable to open browser: " + e.getMessage(),
-                        "Error",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
+                    return null;
+                }
+
+                @Override
+                protected void done() {
+                    loginButton.setEnabled(true); // Re-enable button
+                    if (isCancelled()) {
+                        JOptionPane.showMessageDialog(
+                                LoginTab.this,
+                                "Login to Mindgard timed out - please try again.",
+                                "Mindgard Login",
+                                JOptionPane.ERROR_MESSAGE);
+                    } else if (error != null) {
+                        JOptionPane.showMessageDialog(
+                                LoginTab.this,
+                                "Login failed: " + error.getMessage(),
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(
+                                LoginTab.this,
+                                "Logged in successfully to " + mgsm.getSettings().url());
+                        updateLoginStatus(mgsm);
+                    }
+                }
+            };
+            worker.execute();
         });
         loginButtonPanel.add(loginButton);
     }
