@@ -116,12 +116,13 @@ public class SandboxConnectionFactory {
      */
     private CliInitResponse cliInit(String projectID, String accessToken, MindgardSettings settings, Log logger) {
         try {
+            var customDatasetData = Dataset.fromFile(settings.customDatasetFilename()).map(JSON::json);
             var params = new OrchestratorSetupRequest(
                     projectID,
                     settings.parallelism(),
                     settings.systemPrompt(),
-                    Dataset.fromFile(settings.customDatasetFilename()).map(JSON::json).orElse(settings.dataset()),
-                    Dataset.fromFile(settings.customDatasetFilename()).map(JSON::json).orElse(null),
+                    customDatasetData.isPresent() ? null : settings.dataset(),
+                    customDatasetData.orElse(null),
                     "llm",
                     "user",
                     "sandbox",

@@ -35,13 +35,14 @@ public class MindgardSettingsUI extends JPanel {
         JPanel saveButtonPanel = new JPanel();
         JButton saveButton = new JButton("Save All");
         saveButton.addActionListener((actionEvent) -> {
+            boolean useCustomDataset = tcTab.customDatasetRadio.isSelected();
             saveUIContentsToSettings(
                     // Fetch contents of test config tab
                     tcTab.selectorField.getText(),
                     tcTab.projectIDField.getText(),
-                    ((Dataset) tcTab.datasetField.getSelectedItem()).getDatasetName(),
+                    useCustomDataset ? null : ((Dataset) tcTab.datasetField.getSelectedItem()).getDatasetName(),
                     tcTab.systemPromptField.getText(),
-                    Optional.ofNullable(tcTab.customDataset).map(File::getAbsolutePath).orElse(null),
+                    useCustomDataset ? Optional.ofNullable(tcTab.customDataset).map(File::getAbsolutePath).orElse(null) : null,
                     tcTab.excludeAttacksField.getText(),
                     tcTab.includeAttacksField.getText(),
                     Integer.parseInt(tcTab.promptRepeatsField.getText()),

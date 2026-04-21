@@ -6,6 +6,7 @@ import java.text.NumberFormat;
 import java.util.Optional;
 
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -13,6 +14,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
@@ -33,6 +35,8 @@ public class TestConfigTab extends JPanel {
     public JTextField includeAttacksField;
     public JFormattedTextField promptRepeatsField;
     public JFormattedTextField parallelismField;
+    public JRadioButton datasetRadio;
+    public JRadioButton customDatasetRadio;
     
     public TestConfigTab(MindgardSettingsManager mgsm, MindgardSettingsUI ui) {
         testConfigPanel = new JPanel(new GridBagLayout());
@@ -59,29 +63,40 @@ public class TestConfigTab extends JPanel {
         JLabel projectIDLabel = addTestConfigRow(testConfigPanel, testconfigGBC, "Project ID: ", projectIDField);
         ui.setupUIChangeTracking(projectIDField, projectIDLabel);
 
-        // Domain
+        // Radio buttons for dataset source selection
+        datasetRadio = new JRadioButton("Built-in Dataset");
+        customDatasetRadio = new JRadioButton("Custom Dataset");
+        ButtonGroup datasetSourceGroup = new ButtonGroup();
+        datasetSourceGroup.add(datasetRadio);
+        datasetSourceGroup.add(customDatasetRadio);
+
+        // Default selection based on whether a custom dataset was previously set
+        boolean hasCustomDataset = settings.customDatasetFilename() != null && !settings.customDatasetFilename().isEmpty();
+        datasetRadio.setSelected(!hasCustomDataset);
+        customDatasetRadio.setSelected(hasCustomDataset);
+        if (hasCustomDataset) {
+            customDataset = new File(settings.customDatasetFilename());
+        }
+
+        JPanel radioPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        radioPanel.add(datasetRadio);
+        radioPanel.add(customDatasetRadio);
+        addTestConfigRow(testConfigPanel, testconfigGBC, "Dataset Source:", radioPanel);
+
+        // Built-in Dataset
         datasetField = new JComboBox<>(Dataset.values());
         datasetField.setSelectedIndex(Dataset.indexOfName(settings.dataset()));
-        JLabel datasetLabel = addTestConfigRow(testConfigPanel, testconfigGBC, "Domain:", datasetField);
+        JLabel datasetLabel = addTestConfigRow(testConfigPanel, testconfigGBC, "Built-in Dataset:", datasetField);
         ui.setupUIChangeTracking(datasetField, datasetLabel);
 
-        // System Prompt
-        systemPromptField = new JTextArea(settings.systemPrompt(), 5, 20);
-        JScrollPane systemPromptScroll = new JScrollPane(systemPromptField);
-        JLabel systemPromptLabel = addTestConfigRow(testConfigPanel, testconfigGBC, "System Prompt:", systemPromptScroll);
-        ui.setupUIChangeTracking(systemPromptField, systemPromptLabel);
-
-        //Custom Dataset
-        var customDatasetPathLabel = new JLabel("No file selected");
-        Optional.ofNullable(customDataset)
-                .map(Object::toString)
-                .ifPresent(customDatasetPathLabel::setText);
+        // Custom Dataset
+        var customDatasetPathLabel = new JLabel(hasCustomDataset ? settings.customDatasetFilename() : "No file selected");
         customDatasetPathLabel.setBorder(
                 BorderFactory.createCompoundBorder(
                         BorderFactory.createLineBorder(Color.GRAY),
                         BorderFactory.createEmptyBorder(5, 5, 5, 5))
         );
-        JLabel customDatasetLabel = addTestConfigRow(testConfigPanel, testconfigGBC,"Custom Dataset:", customDatasetPathLabel);
+        JLabel customDatasetLabel = addTestConfigRow(testConfigPanel, testconfigGBC, "Custom Dataset:", customDatasetPathLabel);
         ui.setupUIChangeTracking(customDatasetPathLabel, customDatasetLabel);
 
         // Buttons for custom dataset
@@ -105,6 +120,27 @@ public class TestConfigTab extends JPanel {
         datasetButtons.add(chooseButton);
         datasetButtons.add(clearButton);
         addTestConfigRow(testConfigPanel, testconfigGBC, "", datasetButtons);
+
+        // Enable/disable fields based on radio selection
+        Runnable updateDatasetFields = () -> {
+            boolean useDomain = datasetRadio.isSelected();
+            datasetField.setVisible(useDomain);
+            datasetLabel.setVisible(useDomain);
+            customDatasetPathLabel.setVisible(!useDomain);
+            customDatasetLabel.setVisible(!useDomain);
+            datasetButtons.setVisible(!useDomain);
+            testConfigPanel.revalidate();
+            testConfigPanel.repaint();
+        };
+        datasetRadio.addActionListener(e -> updateDatasetFields.run());
+        customDatasetRadio.addActionListener(e -> updateDatasetFields.run());
+        updateDatasetFields.run();
+
+        // System Prompt
+        systemPromptField = new JTextArea(settings.systemPrompt(), 5, 20);
+        JScrollPane systemPromptScroll = new JScrollPane(systemPromptField);
+        JLabel systemPromptLabel = addTestConfigRow(testConfigPanel, testconfigGBC, "System Prompt:", systemPromptScroll);
+        ui.setupUIChangeTracking(systemPromptField, systemPromptLabel);
 
         //Exclude Attacks
         excludeAttacksField = new JTextField(settings.exclude(), 20);

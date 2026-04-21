@@ -1,6 +1,7 @@
 package ai.mindgard;
 
 import ai.mindgard.DeviceCodeFlow.DeviceCodePayload;
+import ai.mindgard.exception.LoginException;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -18,6 +19,27 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class DeviceCodeFlowTest {
+    @Test
+    void getDeviceCode_wrapsJsonProcessingException() throws IOException, InterruptedException {
+        HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.ofString("example-token");
+        var http = mock(HttpClient.class);
+        var response = mock(HttpResponse.class);
+        var mgsm = mock(MindgardSettingsManager.class);
+        var settings = mock(MindgardSettings.class);
+
+        when(mgsm.getSettings()).thenReturn(settings);
+        when(settings.getLoginUrl()).thenReturn("https://login.sandbox.mindgard.ai");
+        when(settings.clientID()).thenReturn("mindgard-clientID");
+        when(settings.audience()).thenReturn("https://mindgard-audience.com");
+        
+        Function<String, HttpRequest.BodyPublisher> matchHttpBody = body -> publisher;
+        when(http.send(any(), any())).thenReturn(response);
+        when(response.body()).thenReturn("not-json");
+        
+        DeviceCodeFlow dcf = new DeviceCodeFlow(http, matchHttpBody, mgsm);
+        Exception exception = assertThrows(LoginException.class, dcf::getDeviceCode);
+        assertTrue(exception.getMessage().contains("Failed to get device code"));
+    }
 
     @Test
     void getDeviceCode() throws IOException, InterruptedException {
