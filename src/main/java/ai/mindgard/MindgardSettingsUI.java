@@ -27,7 +27,7 @@ public class MindgardSettingsUI extends JPanel {
         JPanel mainPanel = new JPanel(new BorderLayout(0, 0));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
-        LoginTab loginTab = new LoginTab(mgsm, this); // passing 'this' avoids duplicating the setupUIChangeTracking
+        LoginTab loginTab = new LoginTab(mgsm, this, logger); // passing 'this' avoids duplicating the setupUIChangeTracking
                                                       // method
         TestConfigTab tcTab = new TestConfigTab(mgsm, this);
 
