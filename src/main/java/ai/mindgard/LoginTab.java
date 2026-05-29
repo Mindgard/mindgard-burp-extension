@@ -13,9 +13,10 @@ public class LoginTab extends JPanel {
     public JTextField clientIDField;
     public JPanel loginButtonPanel;
     private JLabel loginStatusLabel;
+    private Log logger;
 
-    public LoginTab(MindgardSettingsManager mgsm, MindgardSettingsUI ui) {
-
+    public LoginTab(MindgardSettingsManager mgsm, MindgardSettingsUI ui, Log logger) {
+        this.logger = logger;
         loginPanel = new JPanel(new GridBagLayout());
         GridBagConstraints loginGBC = new GridBagConstraints();
         loginGBC.gridx = 0;
@@ -56,6 +57,7 @@ public class LoginTab extends JPanel {
         JButton loginButton = new JButton("Login");
         loginButton.addActionListener((actionEvent) -> {
             loginButton.setEnabled(false); // Disable button
+            this.logger.log("Logging in...");
             if (ui.hasUnsavedChanges()) {
                 JOptionPane.showMessageDialog(
                     this,
@@ -85,8 +87,10 @@ public class LoginTab extends JPanel {
                     timeoutThread.start();
                     try {
                         var auth = new MindgardAuthentication(mgsm);
+                        logger.log("Attempting to authenticate...");
                         var deviceCode = auth.get_device_code();
 
+                        logger.log("Opening browser for user authentication...");
                         Desktop desktop = Desktop.getDesktop();
                         String url = deviceCode.verification_uri_complete();
                         desktop.browse(new java.net.URI(url));
@@ -96,6 +100,7 @@ public class LoginTab extends JPanel {
                             JOptionPane.showMessageDialog(LoginTab.this,
                                 "Confirm that you see " + deviceCode.user_code())
                         );
+                        logger.log("Validating the device");
 
                         auth.validate_login(deviceCode);
                     } catch (Exception e) {
@@ -119,7 +124,11 @@ public class LoginTab extends JPanel {
                                 "Login failed: " + error.getMessage(),
                                 "Error",
                                 JOptionPane.ERROR_MESSAGE);
+                        var sw = new java.io.StringWriter();
+                        error.printStackTrace(new java.io.PrintWriter(sw));
+                        logger.log("Login failed:\n" + sw);
                     } else {
+                        logger.log("Login successful");
                         JOptionPane.showMessageDialog(
                                 LoginTab.this,
                                 "Logged in successfully to " + mgsm.getSettings().url());
