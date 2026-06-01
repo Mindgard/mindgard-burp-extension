@@ -22,14 +22,16 @@ public class DeviceCodeFlow {
     private final HttpClient http;
     private final Function<String, HttpRequest.BodyPublisher> publisher;
     private MindgardSettingsManager mgsm;
+    private Log logger;
 
     public interface Factory {
-        DeviceCodeFlow create(HttpClient http, Function<String,HttpRequest.BodyPublisher> publisher, MindgardSettingsManager mgsm);
+        DeviceCodeFlow create(HttpClient http, Function<String,HttpRequest.BodyPublisher> publisher, MindgardSettingsManager mgsm, Log logger);
     }
-    public DeviceCodeFlow(HttpClient http, Function<String,HttpRequest.BodyPublisher> publisher, MindgardSettingsManager mgsm) {
+    public DeviceCodeFlow(HttpClient http, Function<String,HttpRequest.BodyPublisher> publisher, MindgardSettingsManager mgsm, Log logger) {
         this.http = http;
         this.publisher = publisher;
         this.mgsm = mgsm;
+        this.logger = logger;
     }
 
     public void validateIdToken(String idToken) {
@@ -58,7 +60,7 @@ public class DeviceCodeFlow {
     }
 
     public record DeviceCodePayload(String client_id, String scope, String audience){}
-    public record DeviceCodeData(String verification_uri, String verification_uri_complete, String user_code, String device_code, String expires_in, String interval) {}
+    public record DeviceCodeData(String verification_uri, String verification_uri_complete, String user_code, String device_code, String expires_in, String interval, String error, String error_description) {}
 
     public DeviceCodeData getDeviceCode() {;
         var settings = mgsm.getSettings();
@@ -72,7 +74,15 @@ public class DeviceCodeFlow {
                 .build();
         try {
             var response = http.send(request, HttpResponse.BodyHandlers.ofString());
-            return fromJson(response.body(), DeviceCodeData.class);
+            var data = fromJson(response.body(), DeviceCodeData.class);
+            if (response.statusCode() >= 400 || data.error() != null) {
+                throw new LoginException(
+                    "Failed to get device code: " + data.error()
+                    + " - " + data.error_description() + " - response status: " + response.statusCode());
+            }
+            return data;
+        } catch (LoginException e) {
+            throw e;
         } catch (Exception e) {
             throw new LoginException("Failed to get device code", e);
         }
@@ -98,10 +108,13 @@ public class DeviceCodeFlow {
                 .build();
         try {
             var response = http.send(request, HttpResponse.BodyHandlers.ofString());
-            return response.statusCode() >= 400
-                    ? Optional.empty()
-                    : Optional.of(fromJson(response.body(), TokenData.class));
+            if (response.statusCode() >= 400) {
+                logger.log("Token request failed with status " + response.statusCode() + ": " + response.body());
+                return Optional.empty();
+            }
+            return Optional.of(fromJson(response.body(), TokenData.class));
         } catch (Exception e) {
+            logger.log("Token request error: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }

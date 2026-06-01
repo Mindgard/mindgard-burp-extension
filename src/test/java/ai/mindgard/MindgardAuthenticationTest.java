@@ -40,7 +40,7 @@ class MindgardAuthenticationTest {
         when(mgsm.getSettings()).thenReturn(settings);
         doReturn(new MindgardToken("https://sandbox.mindgard.ai", "example-token")).when(mgsm).getToken();
 
-        var auth = new MindgardAuthentication(mgsm, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
+        var auth = new MindgardAuthentication(mgsm, http, matchHttpBody, DeviceCodeFlow::new, () -> {}, msg -> {});
 
         when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
         when(response.body()).thenReturn("{\"access_token\": \"example-access-token\", \"id_token\": \"x\", \"scope\": \"y\", \"expires_in\":\"z\", \"token_type\":\"u\"}");
@@ -65,7 +65,7 @@ class MindgardAuthenticationTest {
         when(mgsm.getSettings()).thenReturn(settings);
         doReturn(new MindgardToken("https://sandbox.mindgard.ai", "")).when(mgsm).getToken();
 
-        var auth = new MindgardAuthentication(mgsm, http, matchHttpBody, DeviceCodeFlow::new, () -> {});
+        var auth = new MindgardAuthentication(mgsm, http, matchHttpBody, DeviceCodeFlow::new, () -> {}, msg -> {});
 
         when(http.send(argThat(req -> Objects.equals(publisher,req.bodyPublisher().get())), any())).thenReturn(response);
         when(response.body()).thenReturn("{\"access_token\": \"example-access-token\", \"id_token\": \"x\", \"scope\": \"y\", \"expires_in\":\"z\", \"token_type\":\"u\"}");
@@ -79,7 +79,7 @@ class MindgardAuthenticationTest {
     @Test
     public void login() throws IOException, InterruptedException {
         var http = mock(HttpClient.class);
-        DeviceCodeData deviceCode = new DeviceCodeData("http://example.com/login", "http://example.com/login_complete", "user_code", "device_code", "", "");
+        DeviceCodeData deviceCode = new DeviceCodeData("http://example.com/login", "http://example.com/login_complete", "user_code", "device_code", "", "", null, null);
         TokenData tokenData = new TokenData("refresh_token", "id_token", "", "", "", "", "", "");
         var deviceCodeFlow = mock(DeviceCodeFlow.class);
 
@@ -96,7 +96,7 @@ class MindgardAuthenticationTest {
         when(mgsm.getSettings()).thenReturn(settings);
         doNothing().when(mgsm).setToken(anyString());
 
-        var auth = new MindgardAuthentication(mgsm, http, body -> null,(h,p,m) -> deviceCodeFlow, () -> {});
+        var auth = new MindgardAuthentication(mgsm, http, body -> null, (h,p,m,l) -> deviceCodeFlow, () -> {}, msg -> {});
         auth.validate_login(deviceCode);
         verify(deviceCodeFlow).validateIdToken("id_token");
         verify(mgsm).setToken("refresh_token");

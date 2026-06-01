@@ -17,7 +17,7 @@ public class MindgardExtension implements BurpExtension {
         Log logger = api.logging()::logToOutput;
         MindgardSettingsManager mgsm = new MindgardSettingsManager();
         MindgardSettingsUI userInterface = new MindgardSettingsUI(mgsm, logger);
-        var auth = new MindgardAuthentication(mgsm);
+        var auth = new MindgardAuthentication(mgsm, logger);
         Mindgard mg = new MindgardWebSocketPrompts(logger, auth, mgsm, 60L);
 
         api.intruder().registerPayloadGeneratorProvider(new GeneratorFactory<>(MindgardGenerator.class, () -> new MindgardGenerator(mg, logger)));

@@ -27,26 +27,23 @@ public class MindgardAuthentication {
     private final DeviceCodeFlow deviceCodeFlow;
     private MindgardSettingsManager mgsm;
 
-    /**
-     * Constructor
-     * @param settings The Mindgard Settings record
-     */
-    public MindgardAuthentication(MindgardSettingsManager mgsm) {
+    public MindgardAuthentication(MindgardSettingsManager mgsm, Log logger) {
         this(
             mgsm,
-            HttpClient.newHttpClient(), 
-            HttpRequest.BodyPublishers::ofString, 
-            DeviceCodeFlow::new, 
-            MindgardAuthentication::sleep
+            HttpClient.newHttpClient(),
+            HttpRequest.BodyPublishers::ofString,
+            DeviceCodeFlow::new,
+            MindgardAuthentication::sleep,
+            logger
         );
     }
 
-    public MindgardAuthentication(MindgardSettingsManager mgsm, HttpClient http, Function<String,HttpRequest.BodyPublisher> bodyPublisherFactory, DeviceCodeFlow.Factory deviceCodeFlow, Runnable sleep) {
+    public MindgardAuthentication(MindgardSettingsManager mgsm, HttpClient http, Function<String,HttpRequest.BodyPublisher> bodyPublisherFactory, DeviceCodeFlow.Factory deviceCodeFlow, Runnable sleep, Log logger) {
         this.mgsm = mgsm;
         this.http = http;
         this.publisher = bodyPublisherFactory;
         this.sleep = sleep;
-        this.deviceCodeFlow = deviceCodeFlow.create(http, publisher, mgsm);
+        this.deviceCodeFlow = deviceCodeFlow.create(http, publisher, mgsm, logger);
     }
 
     /**
