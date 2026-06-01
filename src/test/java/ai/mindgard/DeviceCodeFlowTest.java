@@ -36,7 +36,7 @@ class DeviceCodeFlowTest {
         when(http.send(any(), any())).thenReturn(response);
         when(response.body()).thenReturn("not-json");
         
-        DeviceCodeFlow dcf = new DeviceCodeFlow(http, matchHttpBody, mgsm);
+        DeviceCodeFlow dcf = new DeviceCodeFlow(http, matchHttpBody, mgsm, msg -> {});
         Exception exception = assertThrows(LoginException.class, dcf::getDeviceCode);
         assertTrue(exception.getMessage().contains("Failed to get device code"));
     }
@@ -59,7 +59,7 @@ class DeviceCodeFlowTest {
 
         var matchHttpBody = mockHttp(json(new DeviceCodePayload(mgsm.getSettings().clientID(), "openid profile email offline_access", mgsm.getSettings().audience())),json(tokenData), publisher, http, response);
 
-        var actual = new DeviceCodeFlow(http, matchHttpBody,mgsm).getDeviceCode();
+        var actual = new DeviceCodeFlow(http, matchHttpBody, mgsm, msg -> {}).getDeviceCode();
 
         assertEquals(tokenData, actual);
     }
@@ -87,7 +87,7 @@ class DeviceCodeFlowTest {
 
         var matchHttpBody = mockHttp(json(tokenPayload), json(tokenData), publisher, http, response);
 
-        var actual = new DeviceCodeFlow(http, matchHttpBody, mgsm).getToken(deviceCodeData);
+        var actual = new DeviceCodeFlow(http, matchHttpBody, mgsm, msg -> {}).getToken(deviceCodeData);
 
         assertEquals(tokenData, actual.get());
     }

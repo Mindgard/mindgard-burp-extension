@@ -22,14 +22,16 @@ public class DeviceCodeFlow {
     private final HttpClient http;
     private final Function<String, HttpRequest.BodyPublisher> publisher;
     private MindgardSettingsManager mgsm;
+    private Log logger;
 
     public interface Factory {
-        DeviceCodeFlow create(HttpClient http, Function<String,HttpRequest.BodyPublisher> publisher, MindgardSettingsManager mgsm);
+        DeviceCodeFlow create(HttpClient http, Function<String,HttpRequest.BodyPublisher> publisher, MindgardSettingsManager mgsm, Log logger);
     }
-    public DeviceCodeFlow(HttpClient http, Function<String,HttpRequest.BodyPublisher> publisher, MindgardSettingsManager mgsm) {
+    public DeviceCodeFlow(HttpClient http, Function<String,HttpRequest.BodyPublisher> publisher, MindgardSettingsManager mgsm, Log logger) {
         this.http = http;
         this.publisher = publisher;
         this.mgsm = mgsm;
+        this.logger = logger;
     }
 
     public void validateIdToken(String idToken) {
@@ -106,10 +108,13 @@ public class DeviceCodeFlow {
                 .build();
         try {
             var response = http.send(request, HttpResponse.BodyHandlers.ofString());
-            return response.statusCode() >= 400
-                    ? Optional.empty()
-                    : Optional.of(fromJson(response.body(), TokenData.class));
+            if (response.statusCode() >= 400) {
+                logger.log("Token request failed with status " + response.statusCode() + ": " + response.body());
+                return Optional.empty();
+            }
+            return Optional.of(fromJson(response.body(), TokenData.class));
         } catch (Exception e) {
+            logger.log("Token request error: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }

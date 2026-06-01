@@ -86,7 +86,7 @@ public class LoginTab extends JPanel {
                     });
                     timeoutThread.start();
                     try {
-                        var auth = new MindgardAuthentication(mgsm);
+                        var auth = new MindgardAuthentication(mgsm, logger);
                         logger.log("Attempting to authenticate...");
                         var deviceCode = auth.get_device_code();
 
