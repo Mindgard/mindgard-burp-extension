@@ -79,7 +79,7 @@ class MindgardAuthenticationTest {
     @Test
     public void login() throws IOException, InterruptedException {
         var http = mock(HttpClient.class);
-        DeviceCodeData deviceCode = new DeviceCodeData("http://example.com/login", "http://example.com/login_complete", "user_code", "device_code", "", "");
+        DeviceCodeData deviceCode = new DeviceCodeData("http://example.com/login", "http://example.com/login_complete", "user_code", "device_code", "", "", null, null);
         TokenData tokenData = new TokenData("refresh_token", "id_token", "", "", "", "", "", "");
         var deviceCodeFlow = mock(DeviceCodeFlow.class);
 

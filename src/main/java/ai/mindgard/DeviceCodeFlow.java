@@ -58,7 +58,7 @@ public class DeviceCodeFlow {
     }
 
     public record DeviceCodePayload(String client_id, String scope, String audience){}
-    public record DeviceCodeData(String verification_uri, String verification_uri_complete, String user_code, String device_code, String expires_in, String interval) {}
+    public record DeviceCodeData(String verification_uri, String verification_uri_complete, String user_code, String device_code, String expires_in, String interval, String error, String error_description) {}
 
     public DeviceCodeData getDeviceCode() {;
         var settings = mgsm.getSettings();
@@ -72,7 +72,15 @@ public class DeviceCodeFlow {
                 .build();
         try {
             var response = http.send(request, HttpResponse.BodyHandlers.ofString());
-            return fromJson(response.body(), DeviceCodeData.class);
+            var data = fromJson(response.body(), DeviceCodeData.class);
+            if (response.statusCode() >= 400 || data.error() != null) {
+                throw new LoginException(
+                    "Failed to get device code: " + data.error()
+                    + " - " + data.error_description() + " - response status: " + response.statusCode());
+            }
+            return data;
+        } catch (LoginException e) {
+            throw e;
         } catch (Exception e) {
             throw new LoginException("Failed to get device code", e);
         }

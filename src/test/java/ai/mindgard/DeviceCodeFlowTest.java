@@ -48,7 +48,7 @@ class DeviceCodeFlowTest {
         var http = mock(HttpClient.class);
         var response = mock(HttpResponse.class);
 
-        var tokenData = new DeviceCodeFlow.DeviceCodeData("verification_uri", "verification_uri_complete","user_code","device_code","expires_in","interval");
+        var tokenData = new DeviceCodeFlow.DeviceCodeData("verification_uri", "verification_uri_complete","user_code","device_code","expires_in","interval", null, null);
         
         var mgsm = mock(MindgardSettingsManager.class);
         var settings = mock(MindgardSettings.class);
@@ -74,7 +74,7 @@ class DeviceCodeFlowTest {
         when(settings.clientID()).thenReturn("mindgard-clientID");
         when(settings.audience()).thenReturn("https://mindgard-audience.com");
 
-        var deviceCodeData = new DeviceCodeFlow.DeviceCodeData("verification_uri", "verification_uri_complete","user_code","device_code","expires_in","interval");
+        var deviceCodeData = new DeviceCodeFlow.DeviceCodeData("verification_uri", "verification_uri_complete","user_code","device_code","expires_in","interval", null, null);
         var tokenPayload = new DeviceCodeFlow.TokenPayload(
                 "urn:ietf:params:oauth:grant-type:device_code",
                 deviceCodeData.device_code(),
